@@ -1,0 +1,94 @@
+{
+  "hash": "6179702d",
+  "configHash": "ce6d9909",
+  "lockfileHash": "360d429d",
+  "browserHash": "70ec77a5",
+  "optimized": {
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "d32cd9ab",
+      "needsInterop": true
+    },
+    "react-dom": {
+      "src": "../../node_modules/react-dom/index.js",
+      "file": "react-dom.js",
+      "fileHash": "eacfb7a2",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "84e3ec0a",
+      "needsInterop": true
+    },
+    "react/jsx-runtime": {
+      "src": "../../node_modules/react/jsx-runtime.js",
+      "file": "react_jsx-runtime.js",
+      "fileHash": "4937770c",
+      "needsInterop": true
+    },
+    "@fortawesome/free-solid-svg-icons": {
+      "src": "../../node_modules/@fortawesome/free-solid-svg-icons/index.mjs",
+      "file": "@fortawesome_free-solid-svg-icons.js",
+      "fileHash": "e07d70e9",
+      "needsInterop": false
+    },
+    "@fortawesome/react-fontawesome": {
+      "src": "../../node_modules/@fortawesome/react-fontawesome/index.es.js",
+      "file": "@fortawesome_react-fontawesome.js",
+      "fileHash": "3ccf010a",
+      "needsInterop": false
+    },
+    "prop-types": {
+      "src": "../../node_modules/prop-types/index.js",
+      "file": "prop-types.js",
+      "fileHash": "f3c083a4",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "3b57b1d7",
+      "needsInterop": true
+    },
+    "react-icons/ri": {
+      "src": "../../node_modules/react-icons/ri/index.mjs",
+      "file": "react-icons_ri.js",
+      "fileHash": "866bdb10",
+      "needsInterop": false
+    },
+    "react-image-crop": {
+      "src": "../../node_modules/react-image-crop/dist/index.js",
+      "file": "react-image-crop.js",
+      "fileHash": "4d2048a7",
+      "needsInterop": false
+    },
+    "react-zoom-pan-pinch": {
+      "src": "../../node_modules/react-zoom-pan-pinch/dist/index.esm.js",
+      "file": "react-zoom-pan-pinch.js",
+      "fileHash": "20d0f102",
+      "needsInterop": false
+    },
+    "styled-components": {
+      "src": "../../node_modules/styled-components/dist/styled-components.browser.esm.js",
+      "file": "styled-components.js",
+      "fileHash": "e80dd9f1",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-ZVBMO4EJ": {
+      "file": "chunk-ZVBMO4EJ.js"
+    },
+    "chunk-ZNAOO6ZH": {
+      "file": "chunk-ZNAOO6ZH.js"
+    },
+    "chunk-KS2M7ZJI": {
+      "file": "chunk-KS2M7ZJI.js"
+    },
+    "chunk-5WRI5ZAA": {
+      "file": "chunk-5WRI5ZAA.js"
+    }
+  }
+}
