@@ -63,6 +63,7 @@ const MAX_HISTORY_LENGTH = 256;
 
 function App() {
   const canvasRef = useRef(null);
+  const shiftKeyPressedRef = useRef(false);
   
   // Keep other state variables
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -72,8 +73,9 @@ function App() {
   const [importSettings, setImportSettings] = useState({ 
     width: null, 
     height: null, 
-    maxColors: 256 
+    maxColors: 32 
   });
+  const [lineStartPoint, setLineStartPoint] = useState(null);
 
   // Use the custom hook for artwork state
   const {
@@ -1056,6 +1058,51 @@ function App() {
     rgbToHex,
   ]);
 
+  // Add effect to track global keydown/keyup for Shift key & other shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Ignore shortcuts if focus is on an input element
+      const targetTagName = event.target.tagName;
+      if (targetTagName === 'INPUT' || targetTagName === 'TEXTAREA' || targetTagName === 'SELECT') {
+        return;
+      }
+      
+      // Existing Shift key logic
+      if (event.key === 'Shift') {
+        shiftKeyPressedRef.current = true;
+      }
+      
+      // --- New: X key for color swap ---
+      if (event.key.toLowerCase() === 'x') {
+        // Check if there are at least two colors in history
+        if (colorHistory && colorHistory.length >= 2) {
+          const swapTargetColor = colorHistory[1];
+          // Use selectColor to handle the swap and history update
+          selectColor(swapTargetColor);
+          console.log(`Swapped active color to: ${swapTargetColor}`); // Debug log
+        }
+      }
+    };
+
+    const handleKeyUp = (event) => {
+      // Existing Shift key logic
+      if (event.key === 'Shift') {
+        shiftKeyPressedRef.current = false;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    // Cleanup function to remove listeners when component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      // Reset ref just in case (optional)
+      // shiftKeyPressedRef.current = false; 
+    };
+  }, [colorHistory, selectColor]); // Update dependencies to include colorHistory and selectColor
+
   return (
     <AppContainer>
       <GlobalStyles />
@@ -1142,6 +1189,9 @@ function App() {
              rendererType={rendererType}
              onDrawStart={notifyDrawingStarted}
              activeColorRef={activeColorRef}
+             shiftKeyPressedRef={shiftKeyPressedRef}
+             lineStartPoint={lineStartPoint}
+             setLineStartPoint={setLineStartPoint}
              // Effects props (grouped from useEffectState)
              cornerRadius={cornerRadius}
              glowEnabled={glowEnabled}

@@ -6,6 +6,7 @@ import SVGRenderer from './SVGRenderer';
 import { applyPixelColor, pickColor, applyFill, applyLine } from '../../core/drawingLogic';
 import GridOverlay from './GridOverlay';
 import { useRendererProps } from '../../hooks/useRendererProps';
+import { getLinePixels } from '../../utils/drawingUtils';
 
 const CanvasContainer = styled.div`
   width: 100%;
@@ -56,7 +57,10 @@ const Canvas = memo(forwardRef(({
   rendererType = 'canvas', // New prop to switch between renderers
   pixelShape,
   customShape,
-  backgroundColor
+  backgroundColor,
+  shiftKeyPressedRef,
+  lineStartPoint,
+  setLineStartPoint
 }, ref) => {
   console.log('[Canvas] Received props: bulbEnabled:', bulbEnabled, ', bulbSettings:', bulbSettings);
   const { width: gridWidth, height: gridHeight } = gridDimensions;
@@ -156,56 +160,100 @@ const Canvas = memo(forwardRef(({
     if (mode === 'preview') return;
 
     const { gridX, gridY, buttons } = eventData;
-    if (gridX < 0 || gridX >= gridWidth || gridY < 0 || gridY >= gridHeight) return;
+    if (gridX < 0 || gridX >= gridWidth || gridY < 0 || gridY >= gridHeight) {
+        setLineStartPoint(null);
+        return;
+    }
 
     const isRightClick = buttons === 2;
+    const isShiftPressed = shiftKeyPressedRef.current;
 
-    // Explicitly handle CMD key color sampling here
+    // Handle CMD+Click color sampling (takes precedence)
     if (cmdKeyPressedRef.current) {
-      // When CMD is held, always sample color regardless of active tool
       const color = pickColor(pixelGrid, gridX, gridY);
       if (color) {
         onColorChange(color);
       }
-      return; // Important: immediately return to prevent other actions
+      setLineStartPoint(null);
+      return; 
     }
 
-    // Only reach here if CMD key is NOT pressed
+    // --- Straight Line Logic --- 
+    if (isShiftPressed && lineStartPoint && (activeTool === 'pencil' || activeTool === 'eraser')) {
+        console.log("Drawing line from", lineStartPoint, "to", { gridX, gridY });
+
+        const linePixels = getLinePixels(lineStartPoint.x, lineStartPoint.y, gridX, gridY);
+        const colorToApply = isRightClick || activeTool === 'eraser' ? null : activeColorRef.current;
+
+        // Create a new grid copy to apply changes
+        const newGrid = pixelGrid.map(row => [...row]);
+        let changed = false;
+
+        linePixels.forEach(point => {
+            if (point.x >= 0 && point.x < gridWidth && point.y >= 0 && point.y < gridHeight) {
+                if (newGrid[point.y][point.x] !== colorToApply) {
+                    newGrid[point.y][point.x] = colorToApply;
+                    changed = true;
+                }
+            }
+        });
+
+        if (changed) {
+            setPixelGrid(newGrid); 
+            // Trigger history push *after* grid update for the whole line
+            onDrawStart(); 
+        }
+
+        // Reset after drawing line? NO! Set start point to the *current* point for chaining.
+        setLineStartPoint({ x: gridX, y: gridY }); 
+        return; // Prevent single pixel drawing
+    }
+
+    // --- Normal Interaction (Single Pixel, Fill, Color Pick) --- 
+    let currentToolProcessed = false;
+
     if (activeTool === 'colorPicker') {
       const color = pickColor(pixelGrid, gridX, gridY);
       if (color) onColorChange(color);
+      setLineStartPoint(null);
+      currentToolProcessed = true;
       return;
     }
-    
-    // Get the most current color directly from the ref at the time of interaction
-    const colorToApply = isRightClick || activeTool === 'eraser' ? null : activeColorRef.current;
+
+    const colorToApplyOnClick = isRightClick || activeTool === 'eraser' ? null : activeColorRef.current;
 
     if (activeTool === 'fill') {
-      // Apply fill only if it's not a right-click.
-      // The calling function (handleCanvasMouseUp or handlePixelInteraction) ensures this is triggered on the correct mouse action.
       if (!isRightClick) {
-        const newGrid = applyFill(pixelGrid, gridX, gridY, colorToApply);
+        const newGrid = applyFill(pixelGrid, gridX, gridY, colorToApplyOnClick);
         if (newGrid !== pixelGrid) {
           setPixelGrid(newGrid);
-          onDrawStart();
+          onDrawStart(); 
         }
       }
+      setLineStartPoint(null);
+      currentToolProcessed = true;
     } else if (activeTool === 'pencil' || activeTool === 'eraser') {
-      // --- DEBUG: Check pixelGrid before applying color ---
-      if (!pixelGrid) {
-        console.error("[Canvas processInteraction] pixelGrid is undefined before calling applyPixelColor!");
-        return; // Stop execution if grid is undefined
-      }
-      // --- END DEBUG ---
-      const newGrid = applyPixelColor(pixelGrid, gridX, gridY, colorToApply);
+      const newGrid = applyPixelColor(pixelGrid, gridX, gridY, colorToApplyOnClick);
       if (newGrid !== pixelGrid) {
         setPixelGrid(newGrid);
       }
+      currentToolProcessed = true;
     }
+
+    // --- Set Line Start Point --- 
+    if (!isShiftPressed && (activeTool === 'pencil' || activeTool === 'eraser')) {
+        console.log("Setting line start point:", { gridX, gridY });
+        setLineStartPoint({ x: gridX, y: gridY });
+    } else if (!isShiftPressed) {
+        setLineStartPoint(null); 
+    }
+
   }, [
     activeTool, gridWidth, gridHeight, 
     onColorChange, pixelGrid, setPixelGrid, 
-    mode, onDrawStart, activeColorRef, cmdKeyPressedRef
+    mode, onDrawStart, activeColorRef, cmdKeyPressedRef, 
+    shiftKeyPressedRef, lineStartPoint, setLineStartPoint,
+    getLinePixels
   ]);
 
   const handleDrawLine = useCallback((x0, y0, x1, y1, isRightClick) => {
