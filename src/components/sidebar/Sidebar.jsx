@@ -778,32 +778,32 @@ const Sidebar = ({
             {/* Drawing Tools Group */}
             <ToolButtonGroup style={{ marginBottom: '0.75rem' }}> 
               <ToolButton
-                onClick={() => handleToolChange('pencil')}
                 className={activeTool === 'pencil' ? 'active' : ''}
-                title="Pencil Tool"
+                onClick={() => handleToolChange('pencil')}
+                title="Pencil (P)"
               >
                 <FontAwesomeIcon icon={faPencil} />
               </ToolButton>
               <ToolButton
-                onClick={() => handleToolChange('select')}
-                className={activeTool === 'select' ? 'active' : ''}
-                title="Select Tool"
+                className={activeTool === 'eraser' ? 'active' : ''}
+                onClick={() => handleToolChange('eraser')}
+                title="Eraser (E)"
               >
-                <FontAwesomeIcon icon={faMousePointer} />
+                <FontAwesomeIcon icon={faEraser} />
               </ToolButton>
               <ToolButton
-                onClick={() => handleToolChange('fill')}
                 className={activeTool === 'fill' ? 'active' : ''}
-                title="Fill Tool"
+                onClick={() => handleToolChange('fill')}
+                title="Fill (F)"
               >
                 <FontAwesomeIcon icon={faFill} />
               </ToolButton>
               <ToolButton
-                onClick={() => handleToolChange('eraser')}
-                className={activeTool === 'eraser' ? 'active' : ''}
-                title="Eraser Tool"
+                className={activeTool === 'select' ? 'active' : ''}
+                onClick={() => handleToolChange('select')}
+                title="Select (M)"
               >
-                <FontAwesomeIcon icon={faEraser} />
+                <FontAwesomeIcon icon={faMousePointer} />
               </ToolButton>
               <ToolButton
                 onClick={handleToggleGrid}
