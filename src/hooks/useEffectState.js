@@ -19,9 +19,9 @@ export const useEffectState = (initialState = {}) => {
     glow: {
       enabled: false,
       settings: {
-        size: 5,
-        opacity: 50,
-        spread: 50,
+        size: 10,
+        opacity: 25,
+        spread: 10,
         offsetX: 0,
         offsetY: 0,
         blendMode: 'screen'
@@ -31,10 +31,10 @@ export const useEffectState = (initialState = {}) => {
     bulb: {
       enabled: false,
       settings: {
-        intensity: 100,
-        radius: 100,
-        positionX: 50,
-        positionY: 50,
+        intensity: 50,
+        radius: 50,
+        positionX: 25,
+        positionY: 25,
         color: '#ffffff',
         blendMode: 'screen',
       }

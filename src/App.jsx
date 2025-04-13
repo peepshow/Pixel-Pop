@@ -76,6 +76,8 @@ function App() {
     maxColors: 32 
   });
   const [lineStartPoint, setLineStartPoint] = useState(null);
+  const [selectionArea, setSelectionArea] = useState(null);
+  const [copyBuffer, setCopyBuffer] = useState(null);
 
   // Use the custom hook for artwork state
   const {
@@ -1072,7 +1074,7 @@ function App() {
         shiftKeyPressedRef.current = true;
       }
       
-      // --- New: X key for color swap ---
+      // Existing X key for color swap 
       if (event.key.toLowerCase() === 'x') {
         // Check if there are at least two colors in history
         if (colorHistory && colorHistory.length >= 2) {
@@ -1081,6 +1083,108 @@ function App() {
           selectColor(swapTargetColor);
           console.log(`Swapped active color to: ${swapTargetColor}`); // Debug log
         }
+      }
+
+      // --- NEW: Cmd/Ctrl + C for Copy --- 
+      if (event.key.toLowerCase() === 'c' && (event.metaKey || event.ctrlKey)) {
+          if (selectionArea) {
+              console.log("Copy shortcut detected with selection:", selectionArea);
+              event.preventDefault(); // Prevent default browser copy
+
+              const { x1, y1, x2, y2 } = selectionArea;
+              const width = x2 - x1 + 1;
+              const height = y2 - y1 + 1;
+              const extractedData = [];
+
+              for (let y = 0; y < height; y++) {
+                  const row = [];
+                  for (let x = 0; x < width; x++) {
+                      const sourceY = y1 + y;
+                      const sourceX = x1 + x;
+                      // Check bounds just in case, though selectionArea should be valid
+                      if (sourceY >= 0 && sourceY < pixelGrid.length && 
+                          sourceX >= 0 && sourceX < pixelGrid[0].length) {
+                          row.push(pixelGrid[sourceY][sourceX]);
+                      } else {
+                          row.push(null); // Or handle out-of-bounds differently
+                      }
+                  }
+                  extractedData.push(row);
+              }
+
+              setCopyBuffer({
+                  width,
+                  height,
+                  data: extractedData,
+              });
+              console.log("Data copied to buffer:", { width, height });
+              // Optional: maybe clear the selection visual after copy?
+              // setSelectionArea(null);
+          } else {
+              console.log("Copy shortcut ignored, no selection.");
+          }
+      }
+      
+      // --- NEW: Cmd/Ctrl + X for Cut --- 
+      if (event.key.toLowerCase() === 'x' && (event.metaKey || event.ctrlKey)) {
+          if (selectionArea) {
+              console.log("Cut shortcut detected with selection:", selectionArea);
+              event.preventDefault(); // Prevent default browser cut
+
+              // 1. Copy the data first
+              const { x1, y1, x2, y2 } = selectionArea;
+              const width = x2 - x1 + 1;
+              const height = y2 - y1 + 1;
+              const extractedData = [];
+              for (let y = 0; y < height; y++) {
+                  const row = [];
+                  for (let x = 0; x < width; x++) {
+                      const sourceY = y1 + y;
+                      const sourceX = x1 + x;
+                      if (sourceY >= 0 && sourceY < pixelGrid.length && 
+                          sourceX >= 0 && sourceX < pixelGrid[0].length) {
+                          row.push(pixelGrid[sourceY][sourceX]);
+                      } else {
+                          row.push(null);
+                      }
+                  }
+                  extractedData.push(row);
+              }
+              setCopyBuffer({ width, height, data: extractedData });
+              console.log("Data copied to buffer for cut:", { width, height });
+
+              // 2. Create new grid and clear the selected area
+              const newGrid = pixelGrid.map(row => [...row]);
+              let changed = false;
+              for (let y = y1; y <= y2; y++) {
+                  for (let x = x1; x <= x2; x++) {
+                      // Check bounds again for safety
+                      if (y >= 0 && y < newGrid.length && x >= 0 && x < newGrid[0].length) {
+                          if (newGrid[y][x] !== null) {
+                             newGrid[y][x] = null; // Set to transparent
+                             changed = true;
+                          }
+                      }
+                  }
+              }
+
+              // 3. Update state and history if changes occurred
+              if (changed) {
+                  setPixelGrid(newGrid);
+                  // Push history for the cut operation
+                  pushHistory({
+                      pixelGrid: newGrid.map(row => [...row]), // Store a deep copy
+                      gridDimensions: { ...gridDimensions }, // Store current dimensions
+                      type: 'cut' // Action type
+                  });
+              }
+
+              // 4. Clear the visual selection
+              setSelectionArea(null);
+
+          } else {
+              console.log("Cut shortcut ignored, no selection.");
+          }
       }
     };
 
@@ -1101,7 +1205,7 @@ function App() {
       // Reset ref just in case (optional)
       // shiftKeyPressedRef.current = false; 
     };
-  }, [colorHistory, selectColor]); // Update dependencies to include colorHistory and selectColor
+  }, [colorHistory, selectColor, selectionArea, pixelGrid, setCopyBuffer, setPixelGrid, pushHistory, gridDimensions, setSelectionArea]); // Update dependencies to include states/functions needed for cut
 
   return (
     <AppContainer>
@@ -1192,6 +1296,9 @@ function App() {
              shiftKeyPressedRef={shiftKeyPressedRef}
              lineStartPoint={lineStartPoint}
              setLineStartPoint={setLineStartPoint}
+             selectionArea={selectionArea}
+             setSelectionArea={setSelectionArea}
+             copyBuffer={copyBuffer}
              // Effects props (grouped from useEffectState)
              cornerRadius={cornerRadius}
              glowEnabled={glowEnabled}

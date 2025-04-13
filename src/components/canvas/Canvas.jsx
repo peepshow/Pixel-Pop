@@ -7,6 +7,7 @@ import { applyPixelColor, pickColor, applyFill, applyLine } from '../../core/dra
 import GridOverlay from './GridOverlay';
 import { useRendererProps } from '../../hooks/useRendererProps';
 import { getLinePixels } from '../../utils/drawingUtils';
+import SelectionOverlay from './SelectionOverlay';
 
 const CanvasContainer = styled.div`
   width: 100%;
@@ -60,17 +61,24 @@ const Canvas = memo(forwardRef(({
   backgroundColor,
   shiftKeyPressedRef,
   lineStartPoint,
-  setLineStartPoint
+  setLineStartPoint,
+  selectionArea,
+  setSelectionArea,
+  copyBuffer
 }, ref) => {
   console.log('[Canvas] Received props: bulbEnabled:', bulbEnabled, ', bulbSettings:', bulbSettings);
   const { width: gridWidth, height: gridHeight } = gridDimensions;
   const [isPanning, setIsPanning] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const isSelectingRef = useRef(false);
+  const selectionStartCoordRef = useRef(null);
   const [previousTool, setPreviousTool] = useState('pencil');
   const canvasElementRef = useRef(null);
   const canvasRendererRef = useRef(null);
   const svgElementRef = useRef(null);
   const zoomWrapperRef = useRef(null);
+  const [currentZoomScale, setCurrentZoomScale] = useState(1);
   const lastPositionRef = useRef({ x: -1, y: -1 });
   
   // Create empty visibleArea object for SVG renderer
@@ -175,6 +183,7 @@ const Canvas = memo(forwardRef(({
         onColorChange(color);
       }
       setLineStartPoint(null);
+      setSelectionArea(null);
       return; 
     }
 
@@ -206,7 +215,19 @@ const Canvas = memo(forwardRef(({
 
         // Reset after drawing line? NO! Set start point to the *current* point for chaining.
         setLineStartPoint({ x: gridX, y: gridY }); 
+        setSelectionArea(null);
         return; // Prevent single pixel drawing
+    }
+
+    // --- If Selection Tool is active, don't proceed with drawing tools --- 
+    if (activeTool === 'select') {
+        return; 
+    }
+
+    // --- Clear Selection if using other tools --- 
+    if (selectionArea) {
+        console.log("Clearing selection due to non-select tool action");
+        setSelectionArea(null);
     }
 
     // --- Normal Interaction (Single Pixel, Fill, Color Pick) --- 
@@ -253,7 +274,7 @@ const Canvas = memo(forwardRef(({
     onColorChange, pixelGrid, setPixelGrid, 
     mode, onDrawStart, activeColorRef, cmdKeyPressedRef, 
     shiftKeyPressedRef, lineStartPoint, setLineStartPoint,
-    getLinePixels
+    getLinePixels, setSelectionArea, selectionArea
   ]);
 
   const handleDrawLine = useCallback((x0, y0, x1, y1, isRightClick) => {
@@ -310,6 +331,18 @@ const Canvas = memo(forwardRef(({
     const { gridX, gridY, buttons } = coords;
     lastPositionRef.current = { x: gridX, y: gridY };
     
+    // --- NEW: Handle Selection Start --- 
+    if (activeTool === 'select') {
+        // Check if clicking outside an existing selection to potentially clear first? Maybe not needed.
+        console.log("Selection started at:", coords);
+        isSelectingRef.current = true;
+        setIsSelecting(true);
+        selectionStartCoordRef.current = { x: coords.gridX, y: coords.gridY };
+        // DON'T setSelectionArea here - wait for mouse move
+        setIsDrawing(false); 
+        return; 
+    }
+    
     // Always set drawing state TRUE on mouse down for consistent pan/zoom disabling.
     // This ensures the react-zoom-pan-pinch library is disabled even during CMD+click sampling.
     setIsDrawing(true);
@@ -325,7 +358,7 @@ const Canvas = memo(forwardRef(({
     if (activeTool === 'pencil' || activeTool === 'eraser') {
       processInteraction(coords); 
     }
-  }, [mode, activeTool, handleDrawStart, processInteraction, spaceKeyPressedRef, cmdKeyPressedRef]);
+  }, [mode, activeTool, handleDrawStart, processInteraction, spaceKeyPressedRef, cmdKeyPressedRef, setSelectionArea, setIsSelecting]);
 
   const handleCanvasMouseMove = useCallback((coords) => {
     // Skip processing ONLY if space key is pressed for panning
@@ -333,22 +366,45 @@ const Canvas = memo(forwardRef(({
     
     if (mode === 'preview') return;
     
-    // Only run if currently drawing
-    if (!isDrawingRef.current) return;
-    
     const { gridX, gridY, buttons } = coords;
-    const { x: lastX, y: lastY } = lastPositionRef.current;
+
+    // --- NEW: Handle Selection Drag --- 
+    if (isSelectingRef.current && selectionStartCoordRef.current) {
+        const start = selectionStartCoordRef.current;
+        // Check if mouse actually moved (simple check)
+        if (coords.gridX !== start.x || coords.gridY !== start.y) {
+          // Normalize coordinates: x1 <= x2, y1 <= y2
+          const x1 = Math.min(start.x, coords.gridX);
+          const y1 = Math.min(start.y, coords.gridY);
+          const x2 = Math.max(start.x, coords.gridX);
+          const y2 = Math.max(start.y, coords.gridY);
+          
+          // Update selection area state continuously
+          setSelectionArea({ x1, y1, x2, y2 });
+        } else {
+          // If mouse hasn't moved from start, ensure a minimal 1x1 selection is shown
+          // or clear it if it exists but shouldn't?
+          // Let's just ensure it shows the initial 1x1 if needed
+          if (!selectionArea || selectionArea.x1 !== start.x || selectionArea.y1 !== start.y || selectionArea.x2 !== start.x || selectionArea.y2 !== start.y) {
+            setSelectionArea({ x1: start.x, y1: start.y, x2: start.x, y2: start.y });
+          }
+        }
+        return; // Don't proceed with drawing logic
+    }
+    
+    // Existing drawing logic
+    if (!isDrawingRef.current) return;
     
     // Don't process drawing move if CMD is held (color sampling is handled on click)
     if (cmdKeyPressedRef.current) return;
 
     if ((activeTool === 'pencil' || activeTool === 'eraser') && 
-        (lastX !== gridX || lastY !== gridY)) {
+        (gridX !== lastPositionRef.current.x || gridY !== lastPositionRef.current.y)) {
       const isRightClick = buttons === 2;
-      handleDrawLine(lastX, lastY, gridX, gridY, isRightClick);
+      handleDrawLine(lastPositionRef.current.x, lastPositionRef.current.y, gridX, gridY, isRightClick);
       lastPositionRef.current = { x: gridX, y: gridY };
     }
-  }, [mode, activeTool, handleDrawLine, isDrawingRef, spaceKeyPressedRef, cmdKeyPressedRef]);
+  }, [mode, activeTool, handleDrawLine, isDrawingRef, spaceKeyPressedRef, cmdKeyPressedRef, setSelectionArea, selectionArea]);
 
   const handleCanvasMouseUp = useCallback((coords) => {
     // Skip processing ONLY if space key is pressed for panning 
@@ -357,8 +413,67 @@ const Canvas = memo(forwardRef(({
     if (mode === 'preview') return;
     const { gridX, gridY, buttons } = coords;
     const wasDrawing = isDrawingRef.current;
+    const wasSelecting = isSelectingRef.current;
 
-    // Only process fill tool interaction if CMD key is NOT pressed
+    // --- UPDATED: Handle Selection End / Paste on Click --- 
+    if (wasSelecting && selectionStartCoordRef.current) {
+        const start = selectionStartCoordRef.current;
+        const isClick = (start.x === gridX && start.y === gridY);
+
+        if (isClick) {
+            // --- Handle Click with Select Tool --- 
+            if (copyBuffer) {
+                // Buffer exists: PASTE
+                console.log(`Pasting content at (${gridX}, ${gridY})`);
+                const { width: bufferWidth, height: bufferHeight, data: bufferData } = copyBuffer;
+                
+                const newGrid = pixelGrid.map(row => [...row]);
+                let changed = false;
+
+                for (let dy = 0; dy < bufferHeight; dy++) {
+                    for (let dx = 0; dx < bufferWidth; dx++) {
+                        const targetX = gridX + dx;
+                        const targetY = gridY + dy;
+                        if (targetX >= 0 && targetX < gridWidth && targetY >= 0 && targetY < gridHeight) {
+                            if (newGrid[targetY][targetX] !== bufferData[dy][dx]) {
+                                newGrid[targetY][targetX] = bufferData[dy][dx];
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+
+                if (changed) {
+                    setPixelGrid(newGrid);
+                    onDrawStart(); // Trigger history
+                }
+                // Ensure selection is cleared after paste
+                setSelectionArea(null);
+            } else {
+                // No buffer: CLEAR selection on click
+                console.log("Selection click - clearing area");
+                setSelectionArea(null);
+            }
+        } else {
+            // --- Handle Drag Release with Select Tool --- 
+            // Finalize the selection rectangle
+            const x1 = Math.min(start.x, gridX);
+            const y1 = Math.min(start.y, gridY);
+            const x2 = Math.max(start.x, gridX);
+            const y2 = Math.max(start.y, gridY);
+            console.log("Selection drag end - setting area:", { x1, y1, x2, y2 });
+            setSelectionArea({ x1, y1, x2, y2 });
+        }
+        
+        // Reset selection state regardless of click/drag/paste
+        isSelectingRef.current = false;
+        setIsSelecting(false);
+        selectionStartCoordRef.current = null;
+        setIsDrawing(false); 
+        return; // Prevent drawing logic after selection/paste action
+    }
+
+    // Existing drawing/fill logic (only runs if not selecting)
     if (!cmdKeyPressedRef.current && activeTool === 'fill' && buttons !== 2) {
       processInteraction(coords);
     }
@@ -376,7 +491,11 @@ const Canvas = memo(forwardRef(({
     }
     lastPositionRef.current = { x: -1, y: -1 };
 
-  }, [mode, activeTool, processInteraction, handleDrawEnd, spaceKeyPressedRef, cmdKeyPressedRef]);
+  }, [
+      mode, activeTool, processInteraction, handleDrawEnd, spaceKeyPressedRef, 
+      cmdKeyPressedRef, setSelectionArea, setIsSelecting, 
+      copyBuffer, pixelGrid, setPixelGrid, onDrawStart, gridWidth, gridHeight // <-- Add new dependencies for paste logic
+  ]);
 
   const handleCanvasMouseLeave = useCallback(() => {
     // Skip processing if space key is pressed for panning
@@ -387,8 +506,18 @@ const Canvas = memo(forwardRef(({
       handleDrawEnd();
       setIsDrawing(false);
     }
+    // --- NEW: Reset selection state on leave --- 
+    if (isSelectingRef.current) {
+        console.log("Clearing selection on mouse leave");
+        // If selection was in progress, finalize it based on last known coord? Or just cancel?
+        // Let's just cancel for now.
+        setSelectionArea(null); // Clear the visual
+        isSelectingRef.current = false;
+        setIsSelecting(false);
+        selectionStartCoordRef.current = null;
+    }
     lastPositionRef.current = { x: -1, y: -1 };
-  }, [mode, handleDrawEnd, spaceKeyPressedRef]);
+  }, [mode, handleDrawEnd, spaceKeyPressedRef, setSelectionArea, setIsSelecting]);
 
   const getCursor = useCallback(() => {
     if (mode === 'interact') return 'pointer';
@@ -478,6 +607,12 @@ const Canvas = memo(forwardRef(({
     }
   }, [isDrawingRef]);
 
+  // Callback for react-zoom-pan-pinch state changes
+  const onTransformed = useCallback((state) => {
+    setCurrentZoomScale(state.scale);
+    // We could potentially use state.positionX/Y for other calculations if needed
+  }, []);
+
   // Add handler to focus the canvas on click
   const handleContainerClick = useCallback((e) => {
     // Focus the canvas container when clicked
@@ -549,35 +684,37 @@ const Canvas = memo(forwardRef(({
     >
       <TransformWrapper
         ref={zoomWrapperRef}
-        disabled={isDrawing}
+        disabled={isDrawing || isSelecting}
         minScale={0.1}
         maxScale={10}
         limitToBounds={false}
         wheel={{ 
           step: 0.1,
-          smoothStep: 0.01
+          smoothStep: 0.01,
+          disabled: isDrawing || isSelecting
         }}
-        doubleClick={{ disabled: true }} // Disable double-click zooming
-        pan={{
-          disabled: isDrawing || activeTool === 'fill' || cmdKeyPressedRef.current,
-          activationKeys: ["Space"], // Enable Space key for panning
-          paddingSize: 0,
-          lockAxisX: false,
-          lockAxisY: false,
-          velocity: false
+        doubleClick={{ disabled: true }}
+        pan={{ 
+          disabled: isDrawing || isSelecting || !spaceKeyPressedRef.current,
+          velocityEqualToMove: true,
+          activationKeys: ["Space"]
         }}
         options={{
           limitToBounds: false,
           minScale: 0.1,
           maxScale: 10,
-          transformEnabled: true,
-          disabled: isDrawing || cmdKeyPressedRef.current, // Also disable general transformations
-          panningEnabled: true
+          transformEnabled: !(isDrawing || isSelecting),
+          disabled: isDrawing || isSelecting,
+          panningEnabled: !isDrawing && !isSelecting
         }}
         initialScale={1}
         initialPositionX={0}
         initialPositionY={0}
         centerOnInit={true}
+        onPanningStart={() => setIsPanning(true)}
+        onPanningStop={() => setIsPanning(false)}
+        onZoomStop={(ref) => setCurrentZoomScale(ref.state.scale)}
+        onTransformed={onTransformed}
       >
         {({ zoomIn, zoomOut, state = { scale: 1, positionX: 0, positionY: 0 }, ...rest }) => (
           <TransformComponent 
@@ -619,6 +756,21 @@ const Canvas = memo(forwardRef(({
                   activeTool={activeTool}
                 />
               )}
+              {showGrid && (
+                <GridOverlay 
+                  gridWidth={gridWidth}
+                  gridHeight={gridHeight}
+                  pixelSize={pixelSize}
+                  gridGap={gridGap}
+                />
+              )}
+              <SelectionOverlay 
+                selectionArea={selectionArea}
+                gridDimensions={gridDimensions}
+                pixelSize={pixelSize}
+                gridGap={gridGap}
+                zoomScale={currentZoomScale}
+              />
             </RendererWrapper>
           </TransformComponent>
         )}

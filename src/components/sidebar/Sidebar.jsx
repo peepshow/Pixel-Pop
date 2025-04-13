@@ -5,7 +5,8 @@ import {
   faPencil, faFill, faEraser, 
   faTableCells, faTableCellsLarge, 
   faUndo, faRedo, 
-  faSearchPlus, faSearchMinus
+  faSearchPlus, faSearchMinus,
+  faMousePointer
 } from '@fortawesome/free-solid-svg-icons';
 import { RiRectangleLine, RiCircleLine, RiShape2Line, RiTriangleLine, RiHexagonLine, RiCodeSSlashLine } from 'react-icons/ri';
 import { hexToRgba, rgbaToHex, getRgbaOpacity, updateRgbaOpacity } from '../../utils/colorUtils'; // Import from utils
@@ -782,6 +783,13 @@ const Sidebar = ({
                 title="Pencil Tool"
               >
                 <FontAwesomeIcon icon={faPencil} />
+              </ToolButton>
+              <ToolButton
+                onClick={() => handleToolChange('select')}
+                className={activeTool === 'select' ? 'active' : ''}
+                title="Select Tool"
+              >
+                <FontAwesomeIcon icon={faMousePointer} />
               </ToolButton>
               <ToolButton
                 onClick={() => handleToolChange('fill')}
