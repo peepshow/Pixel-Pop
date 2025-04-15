@@ -1,17 +1,24 @@
-# Pixel Pop
+# PixelPop
 
-Pixel Pop is a web-based pixel art creation tool built using React and Vite. It provides a rich set of features for creating and editing pixel art, including:
+PixelPop is a powerful pixel art creation tool that allows you to create, edit, and export pixel art with a variety of tools and effects.
 
-- Drawing, erasing, and filling pixels
-- Color picker and color history
-- Multiple pixel shapes (rectangle, circle, diamond, triangle, hexagon, custom)
-- Special effects (glow, bulb)
-- Export as PNG, JPG, or SVG
-- Save and load projects
+## Features
+
+- **Drawing Tools**: Pencil, Eraser, Fill, and Selection tools
+- **Effects**: Glow, custom pixel shapes, corner radius, and bulb lighting
+- **Export Options**: SVG, PNG, and JPG with customizable settings
+- **Multiple Renderers**: Canvas and SVG rendering engines
+- **Touch Support**: Full support for touch devices with pinch-to-zoom and touch drawing
 
 ## Getting Started
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/pixel-pop.git
+
+# Navigate to the project directory
+cd pixel-pop
+
 # Install dependencies
 npm install
 
@@ -25,15 +32,16 @@ npm run build
 npm run preview
 ```
 
-## Features
+## Documentation
 
-- **Multiple Renderers**: Switch between Canvas and SVG rendering
-- **Grid Controls**: Easily resize the pixel grid and adjust pixel size
-- **Flexible Tools**: Pencil, eraser, fill bucket, and color picker
-- **Special Effects**: Add glow and bulb effects to your pixel art
-- **Custom Shapes**: Create your own pixel shapes with the shape editor
-- **Export Options**: Export your art with customizable settings
-- **Keyboard Shortcuts**: Increase productivity with keyboard shortcuts
+Comprehensive documentation is available in the [docs](./docs) directory:
+
+- [Overview](./docs/README.md) - General information and getting started
+- [Core Architecture](./docs/architecture.md) - Component structure and state management
+- [Features Guide](./docs/features.md) - Detailed description of all features
+- [Implementation Details](./docs/implementation.md) - Technical details about the implementation
+- [Extending PixelPop](./docs/extending.md) - Guide for adding new features
+- [Troubleshooting](./docs/troubleshooting.md) - Solutions for common issues
 
 ## Testing
 
@@ -50,17 +58,25 @@ npm run test:watch
 npm run test:coverage
 ```
 
-For more details on testing, see the [Testing Documentation](./src/test/README.md).
-
 ## Project Structure
 
 - `src/components/`: React components
 - `src/hooks/`: Custom React hooks
-- `src/core/`: Core application logic
 - `src/utils/`: Utility functions
 - `src/styles/`: Global styles
 - `src/test/`: Test configuration and documentation
 
+## Technologies Used
+
+- React for UI and state management
+- Canvas and SVG for rendering
+- Styled Components for styling
+- React Zoom Pan Pinch for transformations
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
 ## License
 
-[MIT License](LICENSE)
+This project is licensed under the MIT License - see the LICENSE file for details.
