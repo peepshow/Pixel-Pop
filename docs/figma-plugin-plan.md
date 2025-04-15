@@ -79,22 +79,25 @@ The PixelPop Figma plugin supports two primary workflows:
 2. User clicks "Export to Figma" option in the Export modal
 3. Data is copied to the clipboard in a special format
 4. User switches to the Figma desktop app where the PixelPop plugin is open
-5. User clicks "Paste from Clipboard" in the plugin
-6. Pixel art is imported into Figma as rectangles, maintaining:
+5. User pastes the data into the textarea in the plugin
+6. User clicks "Process Pasted Data" button
+7. Pixel art is imported into Figma as rectangles, maintaining:
    - Exact pixel positions
-   - Colors
+   - Colors and transparency
    - Overall composition
-7. User can now use the pixel art within their Figma designs
+8. User can now use the pixel art within their Figma designs
 
 ### Plugin-First Approach (Future Enhancement)
 1. User opens Figma and activates the PixelPop plugin
 2. User creates pixel art directly in the plugin or imports existing work
 3. Art is immediately available in the Figma document
 
-### Default Plugin State
-- When not actively receiving data, the plugin shows a waiting state
-- Simple interface with instructions and buttons to paste from clipboard or import test data
-- Easy-to-follow workflow instructions for users
+### Plugin Interface
+- Simple, focused interface with clear instructions
+- Textarea for pasting pixel data from clipboard
+- "Process Pasted Data" button to handle the conversion
+- "Import Test Data" option for quick testing
+- Clear error feedback and notifications
 
 ## 8. Export to Figma Feature (MVP)
 
