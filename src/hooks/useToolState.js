@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 
 const MAX_HISTORY_LENGTH = 256; // Same as in App.jsx
 
-export const useToolState = (initialColor = 'rgb(230, 2, 123)') => {
+export const useToolState = (initialColor = 'rgba(230, 2, 123, 1)') => {
   const [activeTool, setActiveTool] = useState('pencil');
   const [activeColor, setActiveColorState] = useState(initialColor);
   const activeColorRef = useRef(initialColor); // Ref for synchronous access

@@ -737,8 +737,14 @@ const Sidebar = ({
   };
 
   const handleGlowSettingChange = (setting, value) => {
-    // Pass an object with the single setting to update, not a function
-    setGlowSettings({ [setting]: value });
+    // Create a new settings object that preserves all existing settings
+    // and only updates the specific setting that changed
+    const updatedSettings = {
+      ...glowSettings,
+      [setting]: value
+    };
+    console.log('[Sidebar] handleGlowSettingChange:', setting, value, updatedSettings);
+    setGlowSettings(updatedSettings);
   };
 
   const handleBulbChange = (enabled) => {
@@ -746,9 +752,12 @@ const Sidebar = ({
   };
 
   const handleBulbSettingChange = (setting, value) => {
-    const update = { [setting]: value };
-    console.log('[Sidebar] handleBulbSettingChange:', update);
-    setBulbSettings(update);
+    const updatedSettings = {
+      ...bulbSettings,
+      [setting]: value
+    };
+    console.log('[Sidebar] handleBulbSettingChange:', setting, value, updatedSettings);
+    setBulbSettings(updatedSettings);
   };
 
   return (
@@ -815,10 +824,10 @@ const Sidebar = ({
             </ToolButtonGroup>
 
             <ToolButtonGroup>
-              <ToolButton onClick={handleZoomOut} title="Zoom Out">
+              <ToolButton onClick={() => { console.log('ZoomOut button clicked'); handleZoomOut(); }} title="Zoom Out">
                 <FontAwesomeIcon icon={faSearchMinus} />
               </ToolButton>
-              <ToolButton onClick={handleZoomIn} title="Zoom In">
+              <ToolButton onClick={() => { console.log('ZoomIn button clicked'); handleZoomIn(); }} title="Zoom In">
                 <FontAwesomeIcon icon={faSearchPlus} />
               </ToolButton>
               <ToolButton onClick={onUndo} disabled={!canUndo} title="Undo">

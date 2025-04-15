@@ -16,6 +16,7 @@ const CanvasContainer = styled.div`
   position: relative;
   overflow: hidden;
   outline: none; /* Remove outline when focused */
+  touch-action: none; /* Disable browser touch behaviors */
 `;
 
 // Add styled component for renderers
@@ -23,6 +24,7 @@ const RendererWrapper = styled.div`
   position: relative;
   width: fit-content;
   height: fit-content;
+  touch-action: none; /* Disable browser touch behaviors */
 `;
 
 // Add styled component for interactive pixels
@@ -651,14 +653,24 @@ const Canvas = memo(forwardRef(({
   // Expose methods to parent component through ref
   useImperativeHandle(ref, () => ({
     zoomIn: () => {
+      console.log('[Canvas] zoomIn method called, zoomWrapperRef:', zoomWrapperRef.current);
       if (zoomWrapperRef.current) {
+        console.log('[Canvas] Calling zoomIn on TransformWrapper');
         zoomWrapperRef.current.zoomIn(0.2);
+        return true;
       }
+      console.warn('[Canvas] zoomIn failed: zoomWrapperRef not available');
+      return false;
     },
     zoomOut: () => {
+      console.log('[Canvas] zoomOut method called, zoomWrapperRef:', zoomWrapperRef.current);
       if (zoomWrapperRef.current) {
+        console.log('[Canvas] Calling zoomOut on TransformWrapper');
         zoomWrapperRef.current.zoomOut(0.2);
+        return true;
       }
+      console.warn('[Canvas] zoomOut failed: zoomWrapperRef not available');
+      return false;
     },
     // Need to expose SVG reference for export functionality
     svgRef: svgElementRef,
@@ -666,7 +678,9 @@ const Canvas = memo(forwardRef(({
       if (canvasRendererRef.current && canvasRendererRef.current.exportPNG) {
         canvasRendererRef.current.exportPNG();
       }
-    }
+    },
+    // Expose the zoom wrapper for debugging
+    getZoomWrapper: () => zoomWrapperRef.current
   }), [zoomWrapperRef, canvasRendererRef, svgElementRef]);
 
   return (
@@ -695,9 +709,12 @@ const Canvas = memo(forwardRef(({
         }}
         doubleClick={{ disabled: true }}
         pan={{ 
-          disabled: isDrawing || isSelecting || !spaceKeyPressedRef.current,
+          disabled: isDrawing || isSelecting,
           velocityEqualToMove: true,
           activationKeys: ["Space"]
+        }}
+        pinch={{ 
+          step: 5 
         }}
         options={{
           limitToBounds: false,
@@ -718,8 +735,8 @@ const Canvas = memo(forwardRef(({
       >
         {({ zoomIn, zoomOut, state = { scale: 1, positionX: 0, positionY: 0 }, ...rest }) => (
           <TransformComponent 
-            wrapperStyle={{ width: '100%', height: '100%' }}
-            contentStyle={{ cursor: getCursor() }}
+            wrapperStyle={{ width: '100%', height: '100%', touchAction: 'none' }}
+            contentStyle={{ cursor: getCursor(), touchAction: 'none' }}
           >
             <RendererWrapper>
               {rendererType === 'canvas' ? (
@@ -779,4 +796,4 @@ const Canvas = memo(forwardRef(({
   );
 }));
 
-export default Canvas; 
+export default Canvas;

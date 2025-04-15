@@ -13,11 +13,11 @@ describe('useToolState', () => {
 
   it('initializes with default values', () => {
     expect(result.current.activeTool).toBe('pencil');
-    expect(result.current.activeColor).toBe('rgba(255, 0, 0, 1)');
-    expect(result.current.pickerColor).toBe('rgba(255, 0, 0, 1)');
+    expect(result.current.activeColor).toBe('rgba(230, 2, 123, 1)');
+    expect(result.current.pickerColor).toBe('rgba(230, 2, 123, 1)');
     expect(Array.isArray(result.current.colorHistory)).toBe(true);
     expect(result.current.colorHistory.length).toBe(1);
-    expect(result.current.colorHistory[0]).toBe('rgba(255, 0, 0, 1)');
+    expect(result.current.colorHistory[0]).toBe('rgba(230, 2, 123, 1)');
   });
 
   it('updates active color when selected', () => {
@@ -49,7 +49,7 @@ describe('useToolState', () => {
   });
   
   it('adds colors to history and handles duplicates', () => {
-    // Initially we have 'rgba(255, 0, 0, 1)' in the history
+    // Initially we have 'rgba(230, 2, 123, 1)' in the history
     
     // Adding a new color should add to history
     act(() => {
@@ -58,15 +58,15 @@ describe('useToolState', () => {
     
     expect(result.current.colorHistory.length).toBe(2);
     expect(result.current.colorHistory[0]).toBe('#00FF00');
-    expect(result.current.colorHistory[1]).toBe('rgba(255, 0, 0, 1)');
+    expect(result.current.colorHistory[1]).toBe('rgba(230, 2, 123, 1)');
     
     // If we select an existing color, it should move to the front
     act(() => {
-      result.current.selectColor('rgba(255, 0, 0, 1)');
+      result.current.selectColor('rgba(230, 2, 123, 1)');
     });
     
     expect(result.current.colorHistory.length).toBe(2);
-    expect(result.current.colorHistory[0]).toBe('rgba(255, 0, 0, 1)');
+    expect(result.current.colorHistory[0]).toBe('rgba(230, 2, 123, 1)');
     expect(result.current.colorHistory[1]).toBe('#00FF00');
   });
 

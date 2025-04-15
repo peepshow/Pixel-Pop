@@ -11,6 +11,7 @@ const SVGWrapper = styled.div`
   will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
+  touch-action: none; /* Disable browser touch behaviors */
 `;
 
 const SVGContainer = styled.svg`
@@ -30,6 +31,7 @@ const SVGContainer = styled.svg`
   -webkit-font-smoothing: antialiased; /* Smooth rendering */
   -moz-osx-font-smoothing: grayscale; /* Smooth rendering in Firefox */
   filter: translateZ(0); /* Force GPU rendering */
+  touch-action: none; /* Disable browser touch behaviors */
 `;
 
 const Pixel = styled.path`
@@ -55,6 +57,11 @@ const InteractionOverlay = styled.rect`
   will-change: transform;
   transform: translateZ(0);
 `;
+
+// Add touch event handlers that always prevent default
+const preventAllTouchEvents = (event) => {
+  event.preventDefault();
+};
 
 const SVGRenderer = memo(forwardRef(({
   gridWidth,
@@ -165,22 +172,35 @@ const SVGRenderer = memo(forwardRef(({
   // Helper function to convert SVG coordinates to grid coordinates
   const getGridCoordinates = useCallback((e) => {
     if (!svgRef.current) return { gridX: -1, gridY: -1, buttons: 0 };
+    
     const svgElement = svgRef.current; // Use the ref
     const svgRect = svgElement.getBoundingClientRect();
+    
+    // Calculate the scale factor between the current rendered size and the original size
+    const scaleX = svgRect.width / totalWidth;
+    const scaleY = svgRect.height / totalHeight;
+    
+    // Calculate coordinates relative to the SVG element
     const relX = e.clientX - svgRect.left;
     const relY = e.clientY - svgRect.top;
-    const totalWidth = gridWidth * (pixelSize + gridGap);
-    const cellSize = totalWidth > 0 ? (svgRect.width / totalWidth) * (pixelSize + gridGap) : pixelSize + gridGap;
     
-    const gridX = Math.floor(relX / cellSize);
-    const gridY = Math.floor(relY / cellSize);
+    // Convert to the original coordinate space (before scaling)
+    const normalizedX = relX / scaleX;
+    const normalizedY = relY / scaleY;
+    
+    // Calculate the cell size in the original coordinate space
+    const cellSize = pixelSize + gridGap;
+    
+    // Convert to grid coordinates
+    const gridX = Math.floor(normalizedX / cellSize);
+    const gridY = Math.floor(normalizedY / cellSize);
     
     return { 
       gridX: Math.max(0, Math.min(gridX, gridWidth - 1)), 
       gridY: Math.max(0, Math.min(gridY, gridHeight - 1)),
       buttons: e.buttons,
     };
-  }, [gridWidth, gridHeight, pixelSize, gridGap, svgRef]);
+  }, [gridWidth, gridHeight, pixelSize, gridGap, totalWidth, totalHeight, svgRef]);
   
   // Event handlers simplified
   const handleClick = useCallback((e) => {
@@ -241,6 +261,124 @@ const SVGRenderer = memo(forwardRef(({
   const handleMouseLeave = useCallback((e) => {
     if (onCanvasMouseLeave) onCanvasMouseLeave(); // No coords needed
     e.preventDefault();
+  }, [onCanvasMouseLeave]);
+  
+  // Touch event handlers that map to mouse events
+  const handleTouchStart = useCallback((e) => {
+    if (!svgRef.current) return;
+    e.preventDefault(); // Always prevent default
+    
+    // Get the first touch point
+    const touch = e.touches[0];
+    
+    // Create a simulated mouse event with touch coordinates
+    const touchEvent = {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      buttons: 1, // Simulate left mouse button
+      preventDefault: () => {}
+    };
+    
+    // Calculate coordinates and call the mousedown handler
+    const coords = getGridCoordinates(touchEvent);
+    
+    // Call the mouse down handler with calculated coordinates
+    if (onCanvasMouseDown) {
+      onCanvasMouseDown({
+        ...coords,
+        buttons: 1,
+        metaKey: false,
+        originalEvent: e
+      });
+    }
+  }, [getGridCoordinates, onCanvasMouseDown, svgRef]);
+  
+  const handleTouchMove = useCallback((e) => {
+    if (!svgRef.current) return;
+    e.preventDefault(); // Always prevent default
+    
+    // Throttle touch move events with requestAnimationFrame
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    
+    rafRef.current = requestAnimationFrame(() => {
+      // Get the first touch point
+      const touch = e.touches[0];
+      
+      // Create a simulated mouse event with touch coordinates
+      const touchEvent = {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        buttons: 1, // Simulate left mouse button
+        preventDefault: () => {}
+      };
+      
+      // Calculate coordinates and call the mousemove handler
+      const coords = getGridCoordinates(touchEvent);
+      
+      // Call the mouse move handler with calculated coordinates
+      if (onCanvasMouseMove) {
+        onCanvasMouseMove({
+          ...coords,
+          buttons: 1,
+          metaKey: false,
+          originalEvent: e
+        });
+      }
+    });
+  }, [getGridCoordinates, onCanvasMouseMove, svgRef]);
+  
+  const handleTouchEnd = useCallback((e) => {
+    if (!svgRef.current) return;
+    e.preventDefault(); // Always prevent default
+    
+    // Get the first changed touch point (the one that ended)
+    let touchEvent;
+    
+    if (e.changedTouches.length > 0) {
+      const touch = e.changedTouches[0];
+      
+      // Create a simulated mouse event with touch coordinates
+      touchEvent = {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        buttons: 0, // No buttons pressed
+        preventDefault: () => {}
+      };
+    } else {
+      // If no changedTouches, use a default position
+      touchEvent = {
+        clientX: 0,
+        clientY: 0,
+        buttons: 0,
+        preventDefault: () => {}
+      };
+    }
+    
+    // Calculate coordinates and call the mouseup handler
+    const coords = getGridCoordinates(touchEvent);
+    
+    // Call the mouseup handler with calculated coordinates
+    if (onCanvasMouseUp) {
+      onCanvasMouseUp({
+        ...coords,
+        buttons: 0,
+        metaKey: false,
+        originalEvent: e
+      });
+    }
+    
+    // Simulate a click if needed
+    if (onClick) {
+      onClick(coords);
+    }
+  }, [getGridCoordinates, onCanvasMouseUp, onClick, svgRef]);
+  
+  const handleTouchCancel = useCallback((e) => {
+    // Treat touch cancel like mouse leave
+    if (onCanvasMouseLeave) onCanvasMouseLeave();
+    // Do NOT prevent default for touch cancel events
   }, [onCanvasMouseLeave]);
   
   // Calculate visible area for windowing
@@ -566,6 +704,10 @@ const SVGRenderer = memo(forwardRef(({
         onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
         onContextMenu={(e) => e.preventDefault()}
+        onTouchStart={preventAllTouchEvents}
+        onTouchMove={preventAllTouchEvents}
+        onTouchEnd={preventAllTouchEvents}
+        onTouchCancel={preventAllTouchEvents}
       >
         <defs>
           <filter 

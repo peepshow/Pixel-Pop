@@ -60,19 +60,25 @@ export const useEffectState = (initialState = {}) => {
    */
   const toggleEffect = useCallback((effectName, enabled) => {
     setEffects(prevEffects => {
-      if (!prevEffects[effectName]) return prevEffects; // Effect doesn't exist, return previous state
+      if (!prevEffects[effectName]) {
+        console.log(`[useEffectState] Error: Cannot toggle - effect "${effectName}" doesn't exist`);
+        return prevEffects; // Effect doesn't exist, return previous state
+      }
 
       console.log(`[useEffectState] Toggling ${effectName}. Current enabled: ${prevEffects[effectName]?.enabled}. Requested enabled: ${enabled}`);
       
       const isEnabled = enabled !== undefined ? enabled : !prevEffects[effectName].enabled;
-
-      return {
+      
+      const updated = {
         ...prevEffects,
         [effectName]: {
           ...prevEffects[effectName],
           enabled: isEnabled,
         },
       };
+      
+      console.log(`[useEffectState] ${effectName} is now ${isEnabled ? 'enabled' : 'disabled'}`);
+      return updated;
     });
   }, []);
 
@@ -81,23 +87,28 @@ export const useEffectState = (initialState = {}) => {
    */
   const updateEffectSettings = useCallback((effectName, newSettings) => {
     setEffects(prevEffects => {
-      if (!prevEffects[effectName]) return prevEffects; // Effect doesn't exist, return previous state
+      if (!prevEffects[effectName]) {
+        console.log(`[useEffectState] Error: Effect "${effectName}" doesn't exist`);
+        return prevEffects; // Effect doesn't exist, return previous state
+      }
 
       console.log(`[useEffectState] Updating ${effectName} with:`, newSettings);
-
+      
       // Handle corner radius which has settings directly in the effect object
       if (effectName === 'cornerRadius') {
-        return {
+        const updated = {
           ...prevEffects,
           [effectName]: {
             ...prevEffects[effectName],
             ...newSettings,
           },
         };
+        console.log(`[useEffectState] Updated cornerRadius:`, updated[effectName]);
+        return updated;
       }
 
       // Handle other effects that have a settings sub-object
-      return {
+      const updated = {
         ...prevEffects,
         [effectName]: {
           ...prevEffects[effectName],
@@ -107,6 +118,8 @@ export const useEffectState = (initialState = {}) => {
           },
         },
       };
+      console.log(`[useEffectState] Updated ${effectName} settings:`, updated[effectName].settings);
+      return updated;
     });
   }, []);
 

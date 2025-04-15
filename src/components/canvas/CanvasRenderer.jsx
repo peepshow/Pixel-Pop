@@ -23,6 +23,7 @@ const CanvasContainer = styled.div`
   position: relative;
   width: fit-content;
   height: fit-content;
+  touch-action: none; /* Disable browser touch behaviors */
 `;
 
 const CanvasElement = styled.canvas`
@@ -59,7 +60,8 @@ const CanvasRenderer = memo(({
   pixelShape = 'rectangle',
   customShape,
   backgroundColor = '#f0f0f0',
-  activeMode
+  activeMode,
+  spaceKeyPressed = false
 }) => {
   const canvasRef = useRef(null);
   const offscreenCanvasRef = useRef(null);
@@ -138,6 +140,7 @@ const CanvasRenderer = memo(({
 
     // --- Glow Rendering Pass --- 
     if (glowEnabled) {
+        console.log('[CanvasRenderer] Rendering glow effect with settings:', glowSettings);
         for (let y = 0; y < gridHeight; y++) {
             for (let x = 0; x < gridWidth; x++) {
                 const color = pixelData[y]?.[x];
@@ -148,6 +151,8 @@ const CanvasRenderer = memo(({
                 }
             }
         }
+    } else {
+        console.log('[CanvasRenderer] Glow effect is disabled');
     }
 
     // --- Crisp Pixel Rendering Pass --- 
@@ -290,6 +295,121 @@ const CanvasRenderer = memo(({
     if (onMouseLeave) onMouseLeave(event);
   }, [mode, onMouseLeave]);
 
+  // Add Touch event handlers that map to mouse events
+  const handleTouchStart = useCallback((event) => {
+    if (mode === 'preview') return;
+    
+    // Always prevent default to stop browser behaviors
+    event.preventDefault();
+    
+    if (onMouseDown) {
+      // Get the first touch point
+      const touch = event.touches[0];
+      // Calculate position relative to canvas
+      const rect = event.target.getBoundingClientRect();
+      const offsetX = touch.clientX - rect.left;
+      const offsetY = touch.clientY - rect.top;
+      
+      // Scale the offset coordinates based on the canvas element's displayed size vs. actual size
+      const scaleX = rect.width / event.target.width;
+      const scaleY = rect.height / event.target.height;
+      
+      const scaledOffsetX = offsetX / scaleX;
+      const scaledOffsetY = offsetY / scaleY;
+      
+      const coords = getGridCoordinates(scaledOffsetX, scaledOffsetY);
+      
+      // Map to mousedown event with left mouse button pressed (1)
+      onMouseDown({
+        ...coords,
+        buttons: 1, // Simulate left mouse button
+        metaKey: false, // Touch doesn't have metaKey
+        originalEvent: event
+      });
+    }
+  }, [mode, onMouseDown, getGridCoordinates]);
+
+  const handleTouchMove = useCallback((event) => {
+    if (mode === 'preview') return;
+    
+    // Always prevent default to stop browser behaviors
+    event.preventDefault();
+    
+    if (onMouseMove) {
+      // Get the first touch point
+      const touch = event.touches[0];
+      // Calculate position relative to canvas
+      const rect = event.target.getBoundingClientRect();
+      const offsetX = touch.clientX - rect.left;
+      const offsetY = touch.clientY - rect.top;
+      
+      // Scale the offset coordinates based on the canvas element's displayed size vs. actual size
+      const scaleX = rect.width / event.target.width;
+      const scaleY = rect.height / event.target.height;
+      
+      const scaledOffsetX = offsetX / scaleX;
+      const scaledOffsetY = offsetY / scaleY;
+      
+      const coords = getGridCoordinates(scaledOffsetX, scaledOffsetY);
+      
+      // Map to mousemove event with left mouse button pressed (1)
+      onMouseMove({
+        ...coords,
+        buttons: 1, // Simulate left mouse button being pressed during move
+        metaKey: false,
+        originalEvent: event
+      });
+    }
+  }, [mode, onMouseMove, getGridCoordinates]);
+
+  const handleTouchEnd = useCallback((event) => {
+    if (mode === 'preview') return;
+    
+    // Always prevent default to stop browser behaviors
+    event.preventDefault();
+    
+    if (onMouseUp) {
+      // For touch end, we need to use the last known position
+      // since touches array will be empty
+      let offsetX = 0;
+      let offsetY = 0;
+      
+      // If there are any touches remaining, use the first one
+      if (event.changedTouches.length > 0) {
+        const touch = event.changedTouches[0];
+        const rect = event.target.getBoundingClientRect();
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
+        
+        // Scale the offset coordinates based on the canvas element's displayed size vs. actual size
+        const scaleX = rect.width / event.target.width;
+        const scaleY = rect.height / event.target.height;
+        
+        offsetX = offsetX / scaleX;
+        offsetY = offsetY / scaleY;
+      }
+      
+      const coords = getGridCoordinates(offsetX, offsetY);
+      
+      // Map to mouseup event
+      onMouseUp({
+        ...coords,
+        buttons: 0, // No buttons pressed
+        metaKey: false,
+        originalEvent: event
+      });
+    }
+  }, [mode, onMouseUp, getGridCoordinates]);
+
+  const handleTouchCancel = useCallback((event) => {
+    if (mode === 'preview') return;
+    
+    // Treat touch cancel like mouse leave
+    if (onMouseLeave) {
+      onMouseLeave(event);
+    }
+  }, [mode, onMouseLeave]);
+
   return (
     <CanvasContainer>
       <canvas 
@@ -298,6 +418,10 @@ const CanvasRenderer = memo(({
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
         onContextMenu={handleContextMenu} // Keep this to prevent default
         style={style}
         width={gridWidth * (pixelSize + gridGap) - gridGap} 

@@ -813,15 +813,21 @@ function App() {
 
   const handleZoomIn = useCallback(() => {
     if (canvasRef.current) {
+      console.log('[App] ZoomIn called, canvasRef:', canvasRef.current);
       canvasRef.current.zoomIn();
+    } else {
+      console.warn('[App] ZoomIn failed: canvasRef is not available');
     }
-  }, []);
+  }, [canvasRef]);
 
   const handleZoomOut = useCallback(() => {
     if (canvasRef.current) {
+      console.log('[App] ZoomOut called, canvasRef:', canvasRef.current);
       canvasRef.current.zoomOut();
+    } else {
+      console.warn('[App] ZoomOut failed: canvasRef is not available');
     }
-  }, []);
+  }, [canvasRef]);
 
   const handleExportModalOpen = useCallback(() => {
     toggleExportModal(true);
@@ -1250,6 +1256,8 @@ function App() {
           showGrid={showGrid}
           onModeChange={handleModeChange}
           handleToggleGrid={handleToggleGrid}
+          handleZoomIn={handleZoomIn}
+          handleZoomOut={handleZoomOut}
           rendererType={rendererType}
           setRendererType={setRendererType}
           showPerformanceMonitor={showPerformanceMonitor}
