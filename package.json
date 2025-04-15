@@ -13,7 +13,12 @@
     "deploy": "gh-pages -d dist",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "build:figma": "vite build --config figma-plugin/vite.config.js",
+    "dev:figma": "vite build --config figma-plugin/vite.config.js --watch",
+    "figma:prepare": "mkdir -p figma-plugin/dist",
+    "figma:clean": "rm -rf figma-plugin/dist",
+    "figma:build": "npm run figma:clean && npm run figma:prepare && npm run build:figma"
   },
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
@@ -42,6 +47,8 @@
     "globals": "^15.15.0",
     "jsdom": "^26.0.0",
     "vite": "^6.2.0",
-    "vitest": "^3.1.1"
+    "vitest": "^3.1.1",
+    "@figma/plugin-typings": "^1.70.0",
+    "terser": "^5.22.0"
   }
 }

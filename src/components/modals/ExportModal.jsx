@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { isRunningInFigma } from '../../utils/figmaExport';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -273,6 +274,31 @@ const Switch = styled.label`
   }
 `;
 
+// Add a new styled component for the Figma export button
+const FigmaButton = styled(ActionButton)`
+  background-color: #1E1E1E;
+  color: white;
+  border: 1px solid #2C2C2C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:hover:not(:disabled) {
+    background-color: #2C2C2C;
+  }
+`;
+
+const FigmaLogo = styled.div`
+  width: 14px;
+  height: 14px;
+  background-color: #ffffff;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 38 57'%3E%3Cpath d='M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0z'/%3E%3Cpath d='M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 1 1-19 0z'/%3E%3Cpath d='M19 0v19h9.5a9.5 9.5 0 1 0 0-19H19z'/%3E%3Cpath d='M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z'/%3E%3Cpath d='M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z'/%3E%3C/svg%3E");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+`;
+
 const ExportModal = ({ 
   onClose, 
   onExport, 
@@ -285,7 +311,8 @@ const ExportModal = ({
   backgroundColor,
   pixelData,
   rendererType,
-  glowEnabled
+  glowEnabled,
+  onExportToFigma
 }) => {
   const [format, setFormat] = useState('png');
   const [scale, setScale] = useState(1);
@@ -293,6 +320,8 @@ const ExportModal = ({
   const [includeGrid, setIncludeGrid] = useState(false);
   const [includeBackground, setIncludeBackground] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [isFigmaExporting, setIsFigmaExporting] = useState(false);
+  const canExportToFigma = isRunningInFigma() && onExportToFigma;
   
   const handleExport = () => {
     setIsExporting(true);
@@ -306,6 +335,22 @@ const ExportModal = ({
       rendererType
     }).finally(() => {
       setIsExporting(false);
+      onClose();
+    });
+  };
+
+  const handleFigmaExport = () => {
+    if (!canExportToFigma) return;
+    
+    setIsFigmaExporting(true);
+    
+    onExportToFigma({
+      scale: parseInt(scale, 10),
+      padding: parseInt(padding, 10),
+      includeGrid,
+      includeBackground
+    }).finally(() => {
+      setIsFigmaExporting(false);
       onClose();
     });
   };
@@ -360,6 +405,24 @@ const ExportModal = ({
             {format === 'svg' && rendererType === 'svg' && (
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '-0.5rem', marginBottom: '1rem' }}>
                 SVG export will create a vector image preserving all pixel shapes and effects.
+              </div>
+            )}
+            
+            {canExportToFigma && (
+              <div style={{ 
+                backgroundColor: 'rgba(26, 26, 26, 0.1)', 
+                padding: '0.75rem',
+                borderRadius: '4px',
+                marginTop: '1rem',
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <FigmaLogo style={{ width: '18px', height: '18px' }} />
+                <span>
+                  Export directly to Figma is available! Each pixel will be created as a rectangle in Figma, letting you further customize your artwork in Figma's design environment.
+                </span>
               </div>
             )}
           </FormSection>
@@ -436,6 +499,17 @@ const ExportModal = ({
         
         <ModalFooter>
           <CancelButton onClick={onClose}>Cancel</CancelButton>
+          
+          {canExportToFigma && (
+            <FigmaButton 
+              onClick={handleFigmaExport} 
+              disabled={isFigmaExporting}
+            >
+              <FigmaLogo />
+              {isFigmaExporting ? 'Exporting...' : 'Export to Figma'}
+            </FigmaButton>
+          )}
+          
           <ExportButton onClick={handleExport} disabled={isExporting}>
             {isExporting ? 'Exporting...' : 'Export'}
           </ExportButton>

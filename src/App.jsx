@@ -24,6 +24,7 @@ import {
     drawBulbEffect,
     drawGrid
 } from './utils/canvasEffects'
+import { exportToFigma } from './utils/figmaExport'
 
 const AppContainer = styled.div`
   display: flex;
@@ -801,6 +802,44 @@ function App() {
     }
   }, [gridDimensions, pixelSize, gridGap, rendererType, backgroundColor, canvasRef, pixelGrid, pixelShape, cornerRadius, filename]);
 
+  // Handle export to Figma
+  const handleExportToFigma = useCallback(async (options) => {
+    try {
+      console.log('Starting Figma export process');
+      
+      // Format the pixel data for Figma and copy to clipboard
+      const result = await exportToFigma(pixelGrid, {
+        gridDimensions,
+        pixelSize,
+        gridGap,
+        pixelShape,
+        cornerRadius,
+        glowEnabled,
+        glowSettings,
+        ...options
+      });
+      
+      if (result.success) {
+        console.log('Successfully copied Figma data to clipboard');
+        alert('Pixel art data copied to clipboard!\n\nNext steps:\n1. Open the PixelPop Figma plugin\n2. Paste your data into the text box\n3. Click "Process Pasted Data" to import your art');
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Figma export error:', error);
+      
+      // Determine the error type and provide a helpful message
+      let errorMessage = 'Failed to export to Figma.';
+      
+      if (error.message.includes('clipboard')) {
+        errorMessage = 'Failed to copy to clipboard. Please try again or check browser permissions.';
+      }
+      
+      alert(errorMessage);
+      return { success: false, error };
+    }
+  }, [pixelGrid, gridDimensions, pixelSize, gridGap, pixelShape, cornerRadius, glowEnabled, glowSettings]);
+
   // --- Tool Handlers ---
 
   const handleToggleGrid = useCallback(() => {
@@ -1360,7 +1399,9 @@ function App() {
         <ExportModal
           onClose={handleExportModalClose}
           onExport={performExport}
+          onExportToFigma={handleExportToFigma}
           canvasRef={canvasRef}
+          svgRef={canvasRef.current?.svgRef}
           gridDimensions={gridDimensions}
           pixelSize={pixelSize}
           gridGap={gridGap}
@@ -1369,6 +1410,9 @@ function App() {
           pixelData={pixelGrid}
           rendererType={rendererType}
           glowEnabled={glowEnabled}
+          pixelShape={pixelShape}
+          cornerRadius={cornerRadius}
+          glowSettings={glowSettings}
         />
       )}
       

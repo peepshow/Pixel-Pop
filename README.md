@@ -9,6 +9,19 @@ PixelPop is a powerful pixel art creation tool that allows you to create, edit, 
 - **Export Options**: SVG, PNG, and JPG with customizable settings
 - **Multiple Renderers**: Canvas and SVG rendering engines
 - **Touch Support**: Full support for touch devices with pinch-to-zoom and touch drawing
+- **Figma Plugin**: Import your pixel art directly into Figma as vector objects
+
+## Figma Plugin
+
+PixelPop includes a Figma plugin that allows you to export your pixel art directly to Figma:
+
+1. Create your pixel art in PixelPop
+2. Click the "Copy to Clipboard" button
+3. Open Figma and run the PixelPop plugin
+4. Paste your pixel data and click "Process"
+5. Your pixel art appears as vector objects in Figma!
+
+See the [figma-plugin](./figma-plugin) directory for more details.
 
 ## Getting Started
 

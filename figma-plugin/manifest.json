@@ -1,0 +1,38 @@
+{
+  "name": "PixelPop",
+  "id": "pixelpop-pixel-art-creator",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": [
+    "figma",
+    "figjam",
+    "dev"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ]
+  },
+  "documentAccess": "dynamic-page",
+  "menu": [
+    {
+      "name": "Create Pixel Art",
+      "command": "create-pixel-art"
+    },
+    {
+      "name": "Import to Figma",
+      "command": "import-to-figma"
+    },
+    {
+      "separator": true
+    },
+    {
+      "name": "About PixelPop",
+      "command": "about"
+    }
+  ],
+  "permissions": []
+}
