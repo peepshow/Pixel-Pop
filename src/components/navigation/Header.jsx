@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
+import pixelPopLogo from '../../assets/PixelPop_logo.svg';
 
 // Define styled components for the Header here
 const HeaderWrapper = styled.header`
@@ -48,10 +49,45 @@ const HeaderSection = styled.div`
   }
 `;
 
+const LogoWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const LogoLink = styled.a`
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  
+  &:hover {
+    text-decoration: none;
+  }
+`;
+
+const Logo = styled.img`
+  height: 50px;
+  width: auto;
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 3px var(--accent-color));
+  }
+`;
+
 const Header = ({ filename, onFilenameChange, titleElement, navMenuElement }) => {
   return (
     <HeaderWrapper>
-      <HeaderSection>{titleElement}</HeaderSection>
+      <HeaderSection>
+        <LogoWrapper>
+          <LogoLink href="/" title="PixelPop Home">
+            <Logo src={pixelPopLogo} alt="PixelPop Logo" />
+          </LogoLink>
+        </LogoWrapper>
+      </HeaderSection>
       <HeaderSection>
         <FilenameInput
           type="text"

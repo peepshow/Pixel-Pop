@@ -1,5 +1,9 @@
 # PixelPop
 
+<p align="center">
+  <img src="./src/assets/PixelPop_logo.svg" alt="PixelPop Logo" width="250" />
+</p>
+
 PixelPop is a powerful pixel art creation tool that allows you to create, edit, and export pixel art with a variety of tools and effects.
 
 ## Features

@@ -57,7 +57,9 @@ const CanvasWrapper = styled.div`
 
 const Title = styled.h1`
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  color: var(--accent-color);
+  font-weight: 600;
 `
 
 const MAX_HISTORY_LENGTH = 256;
@@ -1258,7 +1260,7 @@ function App() {
       <Header 
         filename={filename} 
         onFilenameChange={setFilename}
-        titleElement={<Title>PixelPop</Title>}
+        titleElement={<Title>Pixel Pop</Title>}
         navMenuElement={
           <NavMenu
             onImportImage={handleFileSelect}
