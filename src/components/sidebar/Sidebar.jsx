@@ -11,6 +11,7 @@ import {
 import { RiRectangleLine, RiCircleLine, RiShape2Line, RiTriangleLine, RiHexagonLine, RiCodeSSlashLine } from 'react-icons/ri';
 import { hexToRgba, rgbaToHex, getRgbaOpacity, updateRgbaOpacity } from '../../utils/colorUtils'; // Import from utils
 import SidebarToggle from './SidebarToggle';
+import Modal from '../modals/Modal'; // import Modal for About popup
 
 // Add Switch component definition
 const Switch = styled.label`
@@ -487,6 +488,24 @@ const TabContent = styled.div`
   padding-top: 1rem; /* Add some space below the sticky tabs */
 `;
 
+// Footer section at bottom of sidebar
+const SidebarFooter = styled.div`
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--text-secondary);
+  a, button {
+    color: var(--accent-color);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+  }
+`;
+
 // Pixel Shape Options in the Sidebar
 const PixelShapeOptions = ({
   pixelShape,
@@ -783,6 +802,8 @@ const Sidebar = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const [showAboutModal, setShowAboutModal] = useState(false);
 
   return (
     <>
@@ -1521,7 +1542,25 @@ const Sidebar = ({
             </ControlRow>
           </ControlGroup>
         </Section>
+
+        <SidebarFooter>
+          © Copyright <a href="https://reganvause.com" target="_blank" rel="noopener noreferrer">Regan Vause</a>
+          {' | '}
+          <button onClick={() => setShowAboutModal(true)}>About PixelPop</button>
+        </SidebarFooter>
       </SidebarContainer>
+
+      {showAboutModal && (
+        <Modal title="About PixelPop" onClose={() => setShowAboutModal(false)}>
+          <p>PixelPop is a lightweight pixel art editor built for fun, creativity, and simplicity. Designed for designers, artists, and kids of all ages, it runs right in your browser with full touch support and easy export options.</p>
+          <p>
+            Crafted with care by <a href="https://reganvause.com" target="_blank" rel="noopener noreferrer">Regan Vause</a> — designer, maker, tinkerer.
+          </p>
+          <h3>Credits</h3>
+          <p>Built with Cursor.</p>
+          <p>Open source on <a href="https://github.com/peepshow/pixel-pop" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+        </Modal>
+      )}
     </>
   );
 };

@@ -13,25 +13,28 @@ const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1500;
 `;
 
 const ModalContainer = styled.div`
-  background-color: var(--bg-secondary);
-  padding: 2rem;
+  background-color: var(--bg-primary);
   border-radius: 8px;
+  overflow-y: auto;
+  width: 500px;
   max-width: 90vw;
   max-height: 90vh;
-  position: relative;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  overflow: auto;
 `;
 
 const ModalHeader = styled.div`
+  padding: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
 `;
 
 const ModalTitle = styled.h2`
@@ -40,22 +43,46 @@ const ModalTitle = styled.h2`
   color: var(--text-primary);
 `;
 
+
 const CloseButton = styled.button`
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
   background: none;
   border: none;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-
+  font-size: 1.2rem;
+  padding: 0.25rem;
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
   }
 `;
+
+const ModalContent = styled.div`
+  padding: 1.5rem;
+  color: var(--text-primary);
+
+  a {
+    color: var(--accent-color);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+
+  p {
+    margin: 0.75rem 0;
+    line-height: 1.5;
+    color: var(--text-primary);
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+  }
+`;
+
 
 const Modal = ({ title, children, onClose }) => {
   // Close modal when clicking outside content
@@ -86,7 +113,9 @@ const Modal = ({ title, children, onClose }) => {
             <FontAwesomeIcon icon={faTimes} />
           </CloseButton>
         </ModalHeader>
-        {children}
+        <ModalContent>
+          {children}
+        </ModalContent>
       </ModalContainer>
     </ModalOverlay>
   );
