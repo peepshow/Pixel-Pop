@@ -165,4 +165,49 @@ PixelPop provides a comprehensive set of features for creating and editing pixel
 ### Mobile-Friendly Interface
 - Responsive design adapts to different screen sizes
 - Touch-optimized controls
-- Automatic adjustment of interface elements for touch devices 
+- Automatic adjustment of interface elements for touch devices
+- Collapsible sidebar drawer with toggle button
+- Mobile header with dropdown menu for app functions
+- Optimized layout for small screens and tablets
+
+## Additional Features
+
+### Pixel Pop
+- Randomly pop pixels from the canvas
+- Customize the number of pixels to pop
+- Useful for creating unique patterns or designs
+
+### Color Palette
+- Create and manage custom color palettes
+- Add, edit, and delete colors
+- Use palettes in your projects
+
+### Layer Management
+- Create and manage multiple layers
+- Adjust layer order and opacity
+- Useful for complex designs and organization
+
+### Export to Web
+- Export your project as a web-friendly format
+- Supports SVG and PNG formats
+- Useful for sharing projects online
+
+### Import from Web
+- Import projects from online sources
+- Supports SVG and PNG formats
+- Useful for incorporating external designs
+
+### Pixel Art Academy
+- Learn and improve your pixel art skills
+- Access tutorials and exercises
+- Useful for beginners and experienced artists
+
+### Pixel Pop Pro
+- Unlock all features and access to the community
+- Supports unlimited projects and exports
+- Useful for professional and commercial use
+
+### Pixel Pop Community
+- Share your projects and connect with other artists
+- Join a community of pixel artists
+- Useful for collaboration and inspiration 

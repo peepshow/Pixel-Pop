@@ -295,6 +295,10 @@ const CanvasRenderer = memo(({
     if (onMouseLeave) onMouseLeave(event);
   }, [mode, onMouseLeave]);
 
+  // Track if we're in a multi-touch gesture
+  const multiTouchRef = useRef(false);
+  const touchTimeoutRef = useRef(null);
+  
   // Add Touch event handlers that map to mouse events
   const handleTouchStart = useCallback((event) => {
     if (mode === 'preview') return;
@@ -302,31 +306,48 @@ const CanvasRenderer = memo(({
     // Always prevent default to stop browser behaviors
     event.preventDefault();
     
-    if (onMouseDown) {
-      // Get the first touch point
-      const touch = event.touches[0];
-      // Calculate position relative to canvas
-      const rect = event.target.getBoundingClientRect();
-      const offsetX = touch.clientX - rect.left;
-      const offsetY = touch.clientY - rect.top;
-      
-      // Scale the offset coordinates based on the canvas element's displayed size vs. actual size
-      const scaleX = rect.width / event.target.width;
-      const scaleY = rect.height / event.target.height;
-      
-      const scaledOffsetX = offsetX / scaleX;
-      const scaledOffsetY = offsetY / scaleY;
-      
-      const coords = getGridCoordinates(scaledOffsetX, scaledOffsetY);
-      
-      // Map to mousedown event with left mouse button pressed (1)
-      onMouseDown({
-        ...coords,
-        buttons: 1, // Simulate left mouse button
-        metaKey: false, // Touch doesn't have metaKey
-        originalEvent: event
-      });
+    // Clear any existing timeout
+    if (touchTimeoutRef.current) {
+      clearTimeout(touchTimeoutRef.current);
+      touchTimeoutRef.current = null;
     }
+    
+    // Track multi-touch state
+    if (event.touches.length > 1) {
+      multiTouchRef.current = true;
+      return; // Don't initiate painting for multi-touch
+    }
+    
+    // Add a small delay to detect if another finger is added (for pinch gesture)
+    touchTimeoutRef.current = setTimeout(() => {
+      // Only proceed if we're still in a single-touch state
+      if (!multiTouchRef.current && onMouseDown) {
+        // Get the first touch point
+        const touch = event.touches[0];
+        // Calculate position relative to canvas
+        const rect = event.target.getBoundingClientRect();
+        const offsetX = touch.clientX - rect.left;
+        const offsetY = touch.clientY - rect.top;
+        
+        // Scale the offset coordinates based on the canvas element's displayed size vs. actual size
+        const scaleX = rect.width / event.target.width;
+        const scaleY = rect.height / event.target.height;
+        
+        const scaledOffsetX = offsetX / scaleX;
+        const scaledOffsetY = offsetY / scaleY;
+        
+        const coords = getGridCoordinates(scaledOffsetX, scaledOffsetY);
+        
+        // Map to mousedown event with left mouse button pressed (1)
+        onMouseDown({
+          ...coords,
+          buttons: 1, // Simulate left mouse button
+          metaKey: false, // Touch doesn't have metaKey
+          originalEvent: event
+        });
+      }
+      touchTimeoutRef.current = null;
+    }, 20); // Short 20ms delay to detect multi-touch
   }, [mode, onMouseDown, getGridCoordinates]);
 
   const handleTouchMove = useCallback((event) => {
@@ -334,6 +355,12 @@ const CanvasRenderer = memo(({
     
     // Always prevent default to stop browser behaviors
     event.preventDefault();
+    
+    // Don't process touch moves during multi-touch
+    if (multiTouchRef.current || event.touches.length > 1) {
+      multiTouchRef.current = true; // Ensure flag is set if we detect multiple touches
+      return;
+    }
     
     if (onMouseMove) {
       // Get the first touch point
@@ -367,6 +394,16 @@ const CanvasRenderer = memo(({
     
     // Always prevent default to stop browser behaviors
     event.preventDefault();
+    
+    // Reset multi-touch state if all fingers are lifted
+    if (event.touches.length === 0) {
+      multiTouchRef.current = false;
+    }
+    
+    // Don't trigger mouseUp during multi-touch gesture
+    if (multiTouchRef.current) {
+      return;
+    }
     
     if (onMouseUp) {
       // For touch end, we need to use the last known position
@@ -409,6 +446,15 @@ const CanvasRenderer = memo(({
       onMouseLeave(event);
     }
   }, [mode, onMouseLeave]);
+
+  // Make sure we clean up the timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (touchTimeoutRef.current) {
+        clearTimeout(touchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <CanvasContainer>

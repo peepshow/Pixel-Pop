@@ -280,8 +280,16 @@ Mobile support is implemented through:
 1. **Responsive Design**
    - Flexible layout using CSS Grid and Flexbox
    - Media queries for different device sizes
+   - Collapsible sidebar drawer on all screen sizes
+   - Mobile-optimized header with dropdown menu
 
-2. **Touch Event Handling**
+2. **Sidebar Drawer Implementation**
+   - Toggle button that slides with the sidebar 
+   - CSS transforms for smooth animations
+   - Consistent behavior across device sizes
+   - Automatic content adjustment based on sidebar visibility
+
+3. **Touch Event Handling**
    - Custom touch event handlers translate touch to appropriate actions
    - PreventDefault() used selectively to allow both drawing and native gestures
    - Touch coordinate mapping accounts for page zoom and positioning 

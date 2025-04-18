@@ -107,6 +107,10 @@ const SVGRenderer = memo(forwardRef(({
   // Add a ref to track request animation frame
   const rafRef = useRef(null);
   
+  // Track if we're in a multi-touch gesture
+  const multiTouchRef = useRef(false);
+  const touchTimeoutRef = useRef(null);
+  
   // Update viewport dimensions when container changes size or zoom changes
   useEffect(() => {
     const updateViewport = () => {
@@ -268,34 +272,59 @@ const SVGRenderer = memo(forwardRef(({
     if (!svgRef.current) return;
     e.preventDefault(); // Always prevent default
     
-    // Get the first touch point
-    const touch = e.touches[0];
-    
-    // Create a simulated mouse event with touch coordinates
-    const touchEvent = {
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-      buttons: 1, // Simulate left mouse button
-      preventDefault: () => {}
-    };
-    
-    // Calculate coordinates and call the mousedown handler
-    const coords = getGridCoordinates(touchEvent);
-    
-    // Call the mouse down handler with calculated coordinates
-    if (onCanvasMouseDown) {
-      onCanvasMouseDown({
-        ...coords,
-        buttons: 1,
-        metaKey: false,
-        originalEvent: e
-      });
+    // Clear any existing timeout
+    if (touchTimeoutRef.current) {
+      clearTimeout(touchTimeoutRef.current);
+      touchTimeoutRef.current = null;
     }
+    
+    // Track multi-touch state
+    if (e.touches.length > 1) {
+      multiTouchRef.current = true;
+      return; // Don't initiate painting for multi-touch
+    }
+    
+    // Add a small delay to detect if another finger is added (for pinch gesture)
+    touchTimeoutRef.current = setTimeout(() => {
+      // Only proceed if we're still in a single-touch state
+      if (!multiTouchRef.current) {
+        // Get the first touch point
+        const touch = e.touches[0];
+        
+        // Create a simulated mouse event with touch coordinates
+        const touchEvent = {
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          buttons: 1, // Simulate left mouse button
+          preventDefault: () => {}
+        };
+        
+        // Calculate coordinates and call the mousedown handler
+        const coords = getGridCoordinates(touchEvent);
+        
+        // Call the mouse down handler with calculated coordinates
+        if (onCanvasMouseDown) {
+          onCanvasMouseDown({
+            ...coords,
+            buttons: 1,
+            metaKey: false,
+            originalEvent: e
+          });
+        }
+      }
+      touchTimeoutRef.current = null;
+    }, 20); // Short 20ms delay to detect multi-touch
   }, [getGridCoordinates, onCanvasMouseDown, svgRef]);
   
   const handleTouchMove = useCallback((e) => {
     if (!svgRef.current) return;
     e.preventDefault(); // Always prevent default
+    
+    // Don't process touch moves during multi-touch
+    if (multiTouchRef.current || e.touches.length > 1) {
+      multiTouchRef.current = true;
+      return;
+    }
     
     // Throttle touch move events with requestAnimationFrame
     if (rafRef.current) {
@@ -332,6 +361,16 @@ const SVGRenderer = memo(forwardRef(({
   const handleTouchEnd = useCallback((e) => {
     if (!svgRef.current) return;
     e.preventDefault(); // Always prevent default
+    
+    // Reset multi-touch state if all fingers are lifted
+    if (e.touches.length === 0) {
+      multiTouchRef.current = false;
+    }
+    
+    // Don't trigger mouseUp during multi-touch gesture
+    if (multiTouchRef.current) {
+      return;
+    }
     
     // Get the first changed touch point (the one that ended)
     let touchEvent;
@@ -690,6 +729,18 @@ const SVGRenderer = memo(forwardRef(({
     );
   }, [totalWidth, totalHeight, handleClick]);
 
+  // Add cleanup for the touch timeout
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      if (touchTimeoutRef.current) {
+        clearTimeout(touchTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <SVGWrapper>
       <SVGContainer
@@ -704,10 +755,10 @@ const SVGRenderer = memo(forwardRef(({
         onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
         onContextMenu={(e) => e.preventDefault()}
-        onTouchStart={preventAllTouchEvents}
-        onTouchMove={preventAllTouchEvents}
-        onTouchEnd={preventAllTouchEvents}
-        onTouchCancel={preventAllTouchEvents}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
       >
         <defs>
           <filter 

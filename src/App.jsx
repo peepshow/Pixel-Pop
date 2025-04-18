@@ -40,8 +40,13 @@ const MainContent = styled.main`
   flex-direction: row;
   position: relative;
   overflow: hidden;
-  padding-right: 330px; /* Account for sidebar width */
   margin-top: 60px; /* Account for fixed header height */
+  padding-right: ${props => props.$sidebarVisible ? '330px' : '0'};
+  transition: padding-right 0.3s ease;
+  
+  @media (max-width: 768px) {
+    padding-right: 0; /* No padding on mobile */
+  }
 `
 
 const CanvasWrapper = styled.div`
@@ -81,6 +86,7 @@ function App() {
   const [lineStartPoint, setLineStartPoint] = useState(null);
   const [selectionArea, setSelectionArea] = useState(null);
   const [copyBuffer, setCopyBuffer] = useState(null);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   // Use the custom hook for artwork state
   const {
@@ -1270,8 +1276,11 @@ function App() {
           />
         }
       />
-      <MainContent>
+      <MainContent $sidebarVisible={sidebarVisible}>
         <Sidebar
+          // Pass sidebarVisible state to Sidebar
+          sidebarVisible={sidebarVisible}
+          onSidebarToggle={setSidebarVisible}
           // color & tool state
           colorHistory={colorHistory}
           onColorSelect={handleColorSelect}

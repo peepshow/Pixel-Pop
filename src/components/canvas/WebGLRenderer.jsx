@@ -28,6 +28,12 @@ const WebGLRenderer = memo(forwardRef(({
   const spaceKeyPressedRef = useRef(spaceKeyPressed);
   // reference to grid helper for toggling visibility
   const gridHelperRef = useRef(null);
+  // Track if we're in a multi-touch gesture for gesture detection
+  const multiTouchRef = useRef(false);
+  const touchTimeoutRef = useRef(null);
+  // Track active touch pointers for reliable multi-touch detection
+  const activePointersRef = useRef(new Set());
+
   useEffect(() => {
     onMouseDownRef.current = onMouseDown;
     onMouseMoveRef.current = onMouseMove;
@@ -110,14 +116,112 @@ const WebGLRenderer = memo(forwardRef(({
     };
 
     // Attach pointer events using refs for stable listener
-    const downHandler = e => { if (spaceKeyPressedRef.current) return; e.preventDefault(); onMouseDownRef.current && handleEvent(e, onMouseDownRef.current); };
-    const moveHandler = e => { if (spaceKeyPressedRef.current) return; e.preventDefault(); onMouseMoveRef.current && handleEvent(e, onMouseMoveRef.current); };
-    const upHandler   = e => { if (spaceKeyPressedRef.current) return; e.preventDefault(); onMouseUpRef.current   && handleEvent(e, onMouseUpRef.current); };
-    const leaveHandler= e => { if (spaceKeyPressedRef.current) return; e.preventDefault(); onMouseLeaveRef.current&& handleEvent(e, onMouseLeaveRef.current); };
+    const downHandler = e => { 
+      // Skip when space key is pressed (for panning)
+      if (spaceKeyPressedRef.current) return; 
+      
+      e.preventDefault(); 
+      
+      // Detect multi-touch for pinch gestures
+      if (e.pointerType === 'touch') {
+        // Clear any existing timeout
+        if (touchTimeoutRef.current) {
+          clearTimeout(touchTimeoutRef.current);
+          touchTimeoutRef.current = null;
+        }
+        
+        // Track this pointer
+        activePointersRef.current.add(e.pointerId);
+        
+        // Check for multi-touch
+        if (activePointersRef.current.size > 1 || multiTouchRef.current) {
+          multiTouchRef.current = true;
+          return; // Don't initiate painting for multi-touch
+        }
+        
+        // Add a small delay to detect if another finger is added (for pinch gesture)
+        touchTimeoutRef.current = setTimeout(() => {
+          if (!multiTouchRef.current && onMouseDownRef.current) {
+            handleEvent(e, onMouseDownRef.current);
+          }
+          touchTimeoutRef.current = null;
+        }, 20); // Short 20ms delay to detect multi-touch
+      } else {
+        // For mouse events, proceed immediately
+        onMouseDownRef.current && handleEvent(e, onMouseDownRef.current);
+      }
+    };
+    
+    const moveHandler = e => { 
+      if (spaceKeyPressedRef.current) return; 
+      e.preventDefault(); 
+      
+      // Don't process moves during multi-touch
+      if (e.pointerType === 'touch') {
+        // We're already tracking pointers in activePointersRef
+        if (activePointersRef.current.size > 1) {
+          multiTouchRef.current = true;
+        }
+        
+        if (multiTouchRef.current) {
+          return;
+        }
+      }
+      
+      onMouseMoveRef.current && handleEvent(e, onMouseMoveRef.current); 
+    };
+    
+    const upHandler = e => { 
+      if (spaceKeyPressedRef.current) return; 
+      e.preventDefault(); 
+      
+      // Reset multi-touch state on pointer up when no active pointers remain
+      if (e.pointerType === 'touch') {
+        // Remove this pointer from our tracking set
+        activePointersRef.current.delete(e.pointerId);
+        
+        // Reset multi-touch state if no pointers remain
+        if (activePointersRef.current.size === 0) {
+          multiTouchRef.current = false;
+        }
+        
+        // Don't trigger up during multi-touch
+        if (multiTouchRef.current) {
+          return;
+        }
+      }
+      
+      onMouseUpRef.current && handleEvent(e, onMouseUpRef.current); 
+    };
+    
+    const leaveHandler = e => { 
+      if (spaceKeyPressedRef.current) return; 
+      e.preventDefault(); 
+      onMouseLeaveRef.current && handleEvent(e, onMouseLeaveRef.current); 
+    };
+
+    const cancelHandler = e => {
+      if (e.pointerType === 'touch') {
+        // Remove this pointer from tracking on pointer cancel
+        activePointersRef.current.delete(e.pointerId);
+        
+        // Reset if no pointers remain
+        if (activePointersRef.current.size === 0) {
+          multiTouchRef.current = false;
+        }
+      }
+      
+      // Treat like a leave event
+      if (spaceKeyPressedRef.current) return;
+      e.preventDefault();
+      onMouseLeaveRef.current && handleEvent(e, onMouseLeaveRef.current);
+    };
+
     canvasEl.addEventListener('pointerdown', downHandler);
     canvasEl.addEventListener('pointermove', moveHandler);
     canvasEl.addEventListener('pointerup', upHandler);
     canvasEl.addEventListener('pointerleave', leaveHandler);
+    canvasEl.addEventListener('pointercancel', cancelHandler);
 
     // Initial render
     renderer.render(scene, camera);
@@ -128,6 +232,14 @@ const WebGLRenderer = memo(forwardRef(({
       canvasEl.removeEventListener('pointermove', moveHandler);
       canvasEl.removeEventListener('pointerup', upHandler);
       canvasEl.removeEventListener('pointerleave', leaveHandler);
+      canvasEl.removeEventListener('pointercancel', cancelHandler);
+      
+      // Clear any pending timeouts
+      if (touchTimeoutRef.current) {
+        clearTimeout(touchTimeoutRef.current);
+        touchTimeoutRef.current = null;
+      }
+      
       // Cleanup mesh and renderer
       scene.remove(mesh);
       geometry.dispose();

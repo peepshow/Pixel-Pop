@@ -7,6 +7,13 @@ const NavContainer = styled.div`
   display: flex;
   gap: 1rem;
   align-items: center;
+  
+  /* Inside mobile menu, display buttons vertically */
+  .mobile-menu & {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
 `;
 
 const NavButton = styled.button`
@@ -28,6 +35,14 @@ const NavButton = styled.button`
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+  
+  /* Full width in mobile menu */
+  .mobile-menu & {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 0.75rem;
   }
 `;
 

@@ -10,6 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { RiRectangleLine, RiCircleLine, RiShape2Line, RiTriangleLine, RiHexagonLine, RiCodeSSlashLine } from 'react-icons/ri';
 import { hexToRgba, rgbaToHex, getRgbaOpacity, updateRgbaOpacity } from '../../utils/colorUtils'; // Import from utils
+import SidebarToggle from './SidebarToggle';
 
 // Add Switch component definition
 const Switch = styled.label`
@@ -74,6 +75,12 @@ const SidebarContainer = styled.aside`
   bottom: 0;
   z-index: 1000;
   height: calc(100vh - 60px); /* Subtract header height */
+  transition: transform 0.3s ease;
+  transform: ${props => props.$isOpen ? 'translateX(0)' : 'translateX(100%)'};
+  
+  @media (max-width: 768px) {
+    width: 280px; /* Match toggle button's right value */
+  }
 `;
 
 // New Header style
@@ -591,7 +598,10 @@ const Sidebar = ({
   // Add new props for custom shape
   onShowCustomShapeModal,
   backgroundColor,
-  setBackgroundColor
+  setBackgroundColor,
+  // Sidebar visibility props
+  sidebarVisible,
+  onSidebarToggle
 }) => {
   const { width: gridWidth, height: gridHeight } = gridDimensions; // Destructure
 
@@ -760,742 +770,759 @@ const Sidebar = ({
     setBulbSettings(updatedSettings);
   };
 
+  const toggleSidebar = () => {
+    onSidebarToggle(!sidebarVisible);
+  };
+  
+  // Modify the useEffect to be a simple resize listener
+  useEffect(() => {
+    const handleResize = () => {
+      // We can add any resize-specific logic here in the future if needed
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <SidebarContainer>
-      {/* --- NEW: Tab Header --- */}
-      <TabHeader>
-        <TabButton 
-          $isActive={mode === 'edit'} 
-          onClick={() => onModeChange('edit')}
-        >
-          Edit
-        </TabButton>
-        <TabButton 
-          $isActive={mode === 'preview'} 
-          onClick={() => onModeChange('preview')}
-        >
-          Preview
-        </TabButton>
-      </TabHeader>
+    <>
+      <SidebarToggle isSidebarOpen={sidebarVisible} toggleSidebar={toggleSidebar} />
+      <SidebarContainer $isOpen={sidebarVisible}>
+        {/* --- NEW: Tab Header --- */}
+        <TabHeader>
+          <TabButton 
+            $isActive={mode === 'edit'} 
+            onClick={() => onModeChange('edit')}
+          >
+            Edit
+          </TabButton>
+          <TabButton 
+            $isActive={mode === 'preview'} 
+            onClick={() => onModeChange('preview')}
+          >
+            Preview
+          </TabButton>
+        </TabHeader>
 
-      {/* --- Edit Mode Content --- */}
-      {mode === 'edit' && (
-        <TabContent> { /* Use a generic div or fragment if no padding needed */}
-          {/* Existing Edit Mode Content - wrapped in conditional render */}
-          <ToolSection> 
-            <SectionTitle>Tools</SectionTitle>
-            {/* Drawing Tools Group */}
-            <ToolButtonGroup style={{ marginBottom: '0.75rem' }}> 
-              <ToolButton
-                className={activeTool === 'pencil' ? 'active' : ''}
-                onClick={() => handleToolChange('pencil')}
-                title="Pencil (P)"
-              >
-                <FontAwesomeIcon icon={faPencil} />
-              </ToolButton>
-              <ToolButton
-                className={activeTool === 'eraser' ? 'active' : ''}
-                onClick={() => handleToolChange('eraser')}
-                title="Eraser (E)"
-              >
-                <FontAwesomeIcon icon={faEraser} />
-              </ToolButton>
-              <ToolButton
-                className={activeTool === 'fill' ? 'active' : ''}
-                onClick={() => handleToolChange('fill')}
-                title="Fill (F)"
-              >
-                <FontAwesomeIcon icon={faFill} />
-              </ToolButton>
-              <ToolButton
-                className={activeTool === 'select' ? 'active' : ''}
-                onClick={() => handleToolChange('select')}
-                title="Select (M)"
-              >
-                <FontAwesomeIcon icon={faMousePointer} />
-              </ToolButton>
-              <ToolButton
-                onClick={handleToggleGrid}
-                className={showGrid ? 'active' : ''}
-                title={showGrid ? 'Hide Grid' : 'Show Grid'}
-              >
-                <FontAwesomeIcon icon={showGrid ? faTableCellsLarge : faTableCells} />
-              </ToolButton>
-            </ToolButtonGroup>
+        {/* --- Edit Mode Content --- */}
+        {mode === 'edit' && (
+          <TabContent> { /* Use a generic div or fragment if no padding needed */}
+            {/* Existing Edit Mode Content - wrapped in conditional render */}
+            <ToolSection> 
+              <SectionTitle>Tools</SectionTitle>
+              {/* Drawing Tools Group */}
+              <ToolButtonGroup style={{ marginBottom: '0.75rem' }}> 
+                <ToolButton
+                  className={activeTool === 'pencil' ? 'active' : ''}
+                  onClick={() => handleToolChange('pencil')}
+                  title="Pencil (P)"
+                >
+                  <FontAwesomeIcon icon={faPencil} />
+                </ToolButton>
+                <ToolButton
+                  className={activeTool === 'eraser' ? 'active' : ''}
+                  onClick={() => handleToolChange('eraser')}
+                  title="Eraser (E)"
+                >
+                  <FontAwesomeIcon icon={faEraser} />
+                </ToolButton>
+                <ToolButton
+                  className={activeTool === 'fill' ? 'active' : ''}
+                  onClick={() => handleToolChange('fill')}
+                  title="Fill (F)"
+                >
+                  <FontAwesomeIcon icon={faFill} />
+                </ToolButton>
+                <ToolButton
+                  className={activeTool === 'select' ? 'active' : ''}
+                  onClick={() => handleToolChange('select')}
+                  title="Select (M)"
+                >
+                  <FontAwesomeIcon icon={faMousePointer} />
+                </ToolButton>
+                <ToolButton
+                  onClick={handleToggleGrid}
+                  className={showGrid ? 'active' : ''}
+                  title={showGrid ? 'Hide Grid' : 'Show Grid'}
+                >
+                  <FontAwesomeIcon icon={showGrid ? faTableCellsLarge : faTableCells} />
+                </ToolButton>
+              </ToolButtonGroup>
 
-            <ToolButtonGroup>
-              <ToolButton onClick={() => { console.log('ZoomOut button clicked'); handleZoomOut(); }} title="Zoom Out">
-                <FontAwesomeIcon icon={faSearchMinus} />
-              </ToolButton>
-              <ToolButton onClick={() => { console.log('ZoomIn button clicked'); handleZoomIn(); }} title="Zoom In">
-                <FontAwesomeIcon icon={faSearchPlus} />
-              </ToolButton>
-              <ToolButton onClick={onUndo} disabled={!canUndo} title="Undo">
-                <FontAwesomeIcon icon={faUndo} />
-              </ToolButton>
-              <ToolButton onClick={onRedo} disabled={!canRedo} title="Redo">
-                <FontAwesomeIcon icon={faRedo} />
-              </ToolButton>
-            </ToolButtonGroup>
-          </ToolSection>
+              <ToolButtonGroup>
+                <ToolButton onClick={() => { console.log('ZoomOut button clicked'); handleZoomOut(); }} title="Zoom Out">
+                  <FontAwesomeIcon icon={faSearchMinus} />
+                </ToolButton>
+                <ToolButton onClick={() => { console.log('ZoomIn button clicked'); handleZoomIn(); }} title="Zoom In">
+                  <FontAwesomeIcon icon={faSearchPlus} />
+                </ToolButton>
+                <ToolButton onClick={onUndo} disabled={!canUndo} title="Undo">
+                  <FontAwesomeIcon icon={faUndo} />
+                </ToolButton>
+                <ToolButton onClick={onRedo} disabled={!canRedo} title="Redo">
+                  <FontAwesomeIcon icon={faRedo} />
+                </ToolButton>
+              </ToolButtonGroup>
+            </ToolSection>
 
-          <Section> {/* Color Section */}
-            <SectionTitle>Color</SectionTitle>
-            <ControlRow>
-              <ControlGroup>
-                <ControlLabel>Paint</ControlLabel>
-                <ColorControl>
-                  <ColorInput
-                    type="color"
-                    value={typeof pickerColor === 'string' ? pickerColor.replace(/rgba?\([^)]+\)/, (match) => rgbaToHex(match)) : '#ff0000'}
-                    onChange={(e) => {
-                      const hex = e.target.value;
-                      const rgba = hexToRgba(hex, typeof pickerColor === 'string' && pickerColor.includes('rgba') ? getRgbaOpacity(pickerColor) : 1);
-                      handlePickerChange({ target: { value: rgba } }); // Update temporary picker state
-                    }}
-                    onBlur={handlePickerBlur} // Finalize color on blur
-                    title="Select Paint Color"
-                  />
-                  <ColorOpacityRow>
-                    <OpacityLabel>{Math.round(typeof pickerColor === 'string' && pickerColor.includes('rgba') ? getRgbaOpacity(pickerColor) * 100 : 100)}%</OpacityLabel>
-                    <RangeInput
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={typeof pickerColor === 'string' && pickerColor.includes('rgba') ? getRgbaOpacity(pickerColor) : 1}
+            <Section> {/* Color Section */}
+              <SectionTitle>Color</SectionTitle>
+              <ControlRow>
+                <ControlGroup>
+                  <ControlLabel>Paint</ControlLabel>
+                  <ColorControl>
+                    <ColorInput
+                      type="color"
+                      value={typeof pickerColor === 'string' ? pickerColor.replace(/rgba?\([^)]+\)/, (match) => rgbaToHex(match)) : '#ff0000'}
                       onChange={(e) => {
-                        const opacity = parseFloat(e.target.value);
-                        const currentColor = pickerColor;
-                        const rgba = updateRgbaOpacity(currentColor, opacity);
-                        handlePickerChange({ target: { value: rgba } });
+                        const hex = e.target.value;
+                        const rgba = hexToRgba(hex, typeof pickerColor === 'string' && pickerColor.includes('rgba') ? getRgbaOpacity(pickerColor) : 1);
+                        handlePickerChange({ target: { value: rgba } }); // Update temporary picker state
                       }}
+                      onBlur={handlePickerBlur} // Finalize color on blur
+                      title="Select Paint Color"
                     />
-                  </ColorOpacityRow>
-                </ColorControl>
-              </ControlGroup>
-              <ControlGroup>
-                <ControlLabel>Background</ControlLabel>
-                <ColorControl>
-                  <ColorInput
-                    type="color"
-                    value={backgroundColor.replace(/rgba?\([^)]+\)/, (match) => rgbaToHex(match))}
-                    onChange={(e) => {
-                      const hex = e.target.value;
-                      const rgba = hexToRgba(hex, backgroundColor.includes('rgba') ? getRgbaOpacity(backgroundColor) : 1);
-                      setBackgroundColor(rgba);
-                    }}
-                    title="Select Background Color"
-                  />
-                  <ColorOpacityRow>
-                    <OpacityLabel>{Math.round(backgroundColor.includes('rgba') ? getRgbaOpacity(backgroundColor) * 100 : 100)}%</OpacityLabel>
-                    <RangeInput
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={backgroundColor.includes('rgba') ? getRgbaOpacity(backgroundColor) : 1}
+                    <ColorOpacityRow>
+                      <OpacityLabel>{Math.round(typeof pickerColor === 'string' && pickerColor.includes('rgba') ? getRgbaOpacity(pickerColor) * 100 : 100)}%</OpacityLabel>
+                      <RangeInput
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={typeof pickerColor === 'string' && pickerColor.includes('rgba') ? getRgbaOpacity(pickerColor) : 1}
+                        onChange={(e) => {
+                          const opacity = parseFloat(e.target.value);
+                          const currentColor = pickerColor;
+                          const rgba = updateRgbaOpacity(currentColor, opacity);
+                          handlePickerChange({ target: { value: rgba } });
+                        }}
+                      />
+                    </ColorOpacityRow>
+                  </ColorControl>
+                </ControlGroup>
+                <ControlGroup>
+                  <ControlLabel>Background</ControlLabel>
+                  <ColorControl>
+                    <ColorInput
+                      type="color"
+                      value={backgroundColor.replace(/rgba?\([^)]+\)/, (match) => rgbaToHex(match))}
                       onChange={(e) => {
-                        const opacity = parseFloat(e.target.value);
-                        const currentColor = backgroundColor;
-                        const rgba = updateRgbaOpacity(currentColor, opacity);
+                        const hex = e.target.value;
+                        const rgba = hexToRgba(hex, backgroundColor.includes('rgba') ? getRgbaOpacity(backgroundColor) : 1);
                         setBackgroundColor(rgba);
                       }}
+                      title="Select Background Color"
                     />
-                  </ColorOpacityRow>
-                </ColorControl>
-              </ControlGroup>
-            </ControlRow>
-            <ColorHistoryContainer>
-              {colorHistory.map((color, index) => (
-                <ColorSwatch
-                  key={`${index}-${color}`}
-                  color={color}
-                  onClick={() => onColorSelect(color)} // Use the passed handler
-                  title={color} 
-                />
-              ))}
-            </ColorHistoryContainer>
-          </Section>
+                    <ColorOpacityRow>
+                      <OpacityLabel>{Math.round(backgroundColor.includes('rgba') ? getRgbaOpacity(backgroundColor) * 100 : 100)}%</OpacityLabel>
+                      <RangeInput
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={backgroundColor.includes('rgba') ? getRgbaOpacity(backgroundColor) : 1}
+                        onChange={(e) => {
+                          const opacity = parseFloat(e.target.value);
+                          const currentColor = backgroundColor;
+                          const rgba = updateRgbaOpacity(currentColor, opacity);
+                          setBackgroundColor(rgba);
+                        }}
+                      />
+                    </ColorOpacityRow>
+                  </ColorControl>
+                </ControlGroup>
+              </ControlRow>
+              <ColorHistoryContainer>
+                {colorHistory.map((color, index) => (
+                  <ColorSwatch
+                    key={`${index}-${color}`}
+                    color={color}
+                    onClick={() => onColorSelect(color)} // Use the passed handler
+                    title={color} 
+                  />
+                ))}
+              </ColorHistoryContainer>
+            </Section>
 
-          <Section> {/* Grid Settings Section */}
-            <SectionTitle>Grid Settings</SectionTitle>
+            <Section> {/* Grid Settings Section */}
+              <SectionTitle>Grid Settings</SectionTitle>
+              <ControlRow>
+                <ControlGroup>
+                  <ControlLabel htmlFor="gridWidth">Width (px)</ControlLabel>
+                  <NumberInput
+                    type="number"
+                    id="gridWidth"
+                    value={localGridWidth}
+                    onChange={handleLocalGridWidthChange}
+                    onBlur={handleGridWidthBlur} // Keep blur for width
+                    min="1"
+                    step="1"
+                  />
+                </ControlGroup>
+                <ControlGroup>
+                  <ControlLabel htmlFor="gridHeight">Height (px)</ControlLabel>
+                  <NumberInput
+                    type="number"
+                    id="gridHeight"
+                    value={localGridHeight}
+                    onChange={handleLocalGridHeightChange}
+                    onBlur={handleGridHeightBlur} // Keep blur for height
+                    min="1"
+                    step="1"
+                  />
+                </ControlGroup>
+              </ControlRow>
+              <ControlRow>
+                <ControlGroup>
+                  <ControlLabel htmlFor="pixelSize">Pixel Size (px)</ControlLabel>
+                  <NumberInput
+                    type="number"
+                    id="pixelSize"
+                    value={localPixelSize}
+                    onChange={handleLocalPixelSizeChange} // Use onChange
+                    // onBlur removed for pixel size
+                    min="1"
+                    step="1"
+                  />
+                </ControlGroup>
+                <ControlGroup>
+                  <ControlLabel htmlFor="gridGap">Grid Gap (px)</ControlLabel>
+                  <NumberInput
+                    type="number"
+                    id="gridGap"
+                    value={localGridGap}
+                    onChange={handleLocalGridGapChange} // Use onChange
+                    // onBlur removed for grid gap
+                    min="0"
+                    step="1"
+                  />
+                </ControlGroup>
+              </ControlRow>
+            </Section>
+
+            <Section> {/* Pixel Effects Section */}
+              <SectionTitle>Pixel Effects</SectionTitle>
+              
+              {/* Pixel Shape Controls - available for both renderers */}
+              <EffectGroup>
+                <EffectHeader $hasContent={true}>
+                  <EffectTitle>Pixel Shape</EffectTitle>
+                </EffectHeader>
+                <EffectControls>
+                  <ShapeButtonsGrid>
+                    <ShapeButton 
+                      $isActive={pixelShape === 'rectangle'} 
+                      onClick={() => setPixelShape('rectangle')}
+                      title="Rectangle"
+                    >
+                      <RiRectangleLine />
+                    </ShapeButton>
+                    <ShapeButton 
+                      $isActive={pixelShape === 'circle'} 
+                      onClick={() => setPixelShape('circle')}
+                      title="Circle"
+                    >
+                      <RiCircleLine />
+                    </ShapeButton>
+                    <ShapeButton 
+                      $isActive={pixelShape === 'diamond'} 
+                      onClick={() => setPixelShape('diamond')}
+                      title="Diamond"
+                    >
+                      <RiShape2Line />
+                    </ShapeButton>
+                    <ShapeButton 
+                      $isActive={pixelShape === 'triangle'} 
+                      onClick={() => setPixelShape('triangle')}
+                      title="Triangle"
+                    >
+                      <RiTriangleLine />
+                    </ShapeButton>
+                    <ShapeButton 
+                      $isActive={pixelShape === 'hexagon'} 
+                      onClick={() => setPixelShape('hexagon')}
+                      title="Hexagon"
+                    >
+                      <RiHexagonLine />
+                    </ShapeButton>
+                    <ShapeButton 
+                      $isActive={pixelShape === 'custom'} 
+                      onClick={onShowCustomShapeModal}
+                      title="Custom Shape"
+                      style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}
+                    >
+                      <RiCodeSSlashLine />
+                      <span style={{ marginLeft: '0.5rem' }}>Custom</span>
+                    </ShapeButton>
+                  </ShapeButtonsGrid>
+                </EffectControls>
+              </EffectGroup>
+              
+              {/* Corner Radius Controls */}
+              <EffectGroup>
+                <EffectHeader $hasContent={cornerRadius.enabled}>
+                  <EffectTitle>Corner Radius</EffectTitle>
+                  <Switch>
+                    <input
+                      type="checkbox"
+                      checked={cornerRadius.enabled}
+                      onChange={(e) => setCornerRadius({ enabled: e.target.checked })}
+                    />
+                    <span></span>
+                  </Switch>
+                </EffectHeader>
+                {cornerRadius.enabled && (
+                  <EffectControls>
+                    <CornerGrid>
+                      <ControlGroup>
+                        <ControlLabel>Top Left (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={cornerRadius.topLeft}
+                            onChange={(e) => handleCornerRadiusChange('topLeft', parseInt(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={cornerRadius.topLeft}
+                            onChange={(e) => handleCornerRadiusChange('topLeft', parseInt(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+                      <ControlGroup>
+                        <ControlLabel>Top Right (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={cornerRadius.topRight}
+                            onChange={(e) => handleCornerRadiusChange('topRight', parseInt(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={cornerRadius.topRight}
+                            onChange={(e) => handleCornerRadiusChange('topRight', parseInt(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+                      <ControlGroup>
+                        <ControlLabel>Bottom Left (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={cornerRadius.bottomLeft}
+                            onChange={(e) => handleCornerRadiusChange('bottomLeft', parseInt(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={cornerRadius.bottomLeft}
+                            onChange={(e) => handleCornerRadiusChange('bottomLeft', parseInt(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+                      <ControlGroup>
+                        <ControlLabel>Bottom Right (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={cornerRadius.bottomRight}
+                            onChange={(e) => handleCornerRadiusChange('bottomRight', parseInt(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={cornerRadius.bottomRight}
+                            onChange={(e) => handleCornerRadiusChange('bottomRight', parseInt(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+                    </CornerGrid>
+
+                    {/* Preset Buttons */}
+                    <PresetButtons>
+                      <PresetButton onClick={() => handleCornerPreset('none')}>None</PresetButton>
+                      <PresetButton onClick={() => handleCornerPreset('circle')}>Circle</PresetButton>
+                      <PresetButton onClick={() => handleCornerPreset('top')}>Top</PresetButton>
+                      <PresetButton onClick={() => handleCornerPreset('bottom')}>Bottom</PresetButton>
+                      <PresetButton onClick={() => handleCornerPreset('left')}>Left</PresetButton>
+                      <PresetButton onClick={() => handleCornerPreset('right')}>Right</PresetButton>
+                    </PresetButtons>
+                  </EffectControls>
+                )}
+              </EffectGroup>
+
+              {/* Glow Effect Controls */}
+              <EffectGroup>
+                <EffectHeader $hasContent={glowEnabled}>
+                  <EffectTitle>Glow Effect</EffectTitle>
+                  <Switch>
+                    <input
+                      type="checkbox"
+                      checked={glowEnabled}
+                      onChange={handleGlowChange}
+                    />
+                    <span></span>
+                  </Switch>
+                </EffectHeader>
+                {glowEnabled && (
+                  <EffectControls>
+                    <CornerGrid>
+                      {/* --- Row 1 --- */}
+                      <ControlGroup>
+                        <ControlLabel>Opacity (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={glowSettings.opacity}
+                            onChange={(e) => handleGlowSettingChange('opacity', Number(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={glowSettings.opacity}
+                            onChange={(e) => handleGlowSettingChange('opacity', Number(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+                      <ControlGroup>
+                        <ControlLabel>Blend Mode</ControlLabel>
+                        <SliderControl>
+                          <SelectInput
+                            value={glowSettings.blendMode || 'lighter'}
+                            onChange={(e) => handleGlowSettingChange('blendMode', e.target.value)}
+                            style={{ flex: 1 }}
+                          >
+                            {/* Blend Mode Options */}
+                            <option value="source-over">Normal</option>
+                            <option value="lighter">Lighter</option>
+                            <option value="screen">Screen</option>
+                            <option value="color-dodge">Color Dodge</option>
+                            <option value="add">Add</option>
+                            <option value="multiply">Multiply</option>
+                            <option value="color-burn">Color Burn</option>
+                            <option value="overlay">Overlay</option>
+                            <option value="soft-light">Soft Light</option>
+                            <option value="hard-light">Hard Light</option>
+                            <option value="difference">Difference</option>
+                            <option value="exclusion">Exclusion</option>
+                            <option value="hue">Hue</option>
+                            <option value="saturation">Saturation</option>
+                            <option value="color">Color</option>
+                            <option value="luminosity">Luminosity</option>
+                          </SelectInput>
+                        </SliderControl>
+                      </ControlGroup>
+
+                      {/* --- Row 2 --- */}
+                      <ControlGroup>
+                        <ControlLabel>Blur (px)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="50"
+                            value={glowSettings.size}
+                            onChange={(e) => handleGlowSettingChange('size', Number(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="50"
+                            value={glowSettings.size}
+                            onChange={(e) => handleGlowSettingChange('size', Number(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+                      <ControlGroup>
+                        <ControlLabel>Spread (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={glowSettings.spread}
+                            onChange={(e) => handleGlowSettingChange('spread', Number(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={glowSettings.spread}
+                            onChange={(e) => handleGlowSettingChange('spread', Number(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+
+                      {/* --- Row 3 --- */}
+                      <ControlGroup>
+                        <ControlLabel>Offset X (px)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="-50"
+                            max="50"
+                            value={glowSettings.offsetX}
+                            onChange={(e) => handleGlowSettingChange('offsetX', Number(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="-50"
+                            max="50"
+                            value={glowSettings.offsetX}
+                            onChange={(e) => handleGlowSettingChange('offsetX', Number(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+                      <ControlGroup>
+                        <ControlLabel>Offset Y (px)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="-50"
+                            max="50"
+                            value={glowSettings.offsetY}
+                            onChange={(e) => handleGlowSettingChange('offsetY', Number(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="-50"
+                            max="50"
+                            value={glowSettings.offsetY}
+                            onChange={(e) => handleGlowSettingChange('offsetY', Number(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+                    </CornerGrid>
+                  </EffectControls>
+                )}
+              </EffectGroup>
+
+              {/* Bulb Effect Controls */}
+              <EffectGroup>
+                <EffectHeader $hasContent={bulbEnabled}>
+                  <EffectTitle>Bulb Effect</EffectTitle>
+                  <Switch>
+                    <input
+                      type="checkbox"
+                      checked={bulbEnabled}
+                      onChange={(e) => handleBulbChange(e.target.checked)}
+                    />
+                    <span></span>
+                  </Switch>
+                </EffectHeader>
+                {bulbEnabled && (
+                  <EffectControls>
+                    <CornerGrid>
+                      {/* Intensity Control */}
+                      <ControlGroup>
+                        <ControlLabel>Intensity (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={bulbSettings.intensity}
+                            onChange={(e) => handleBulbSettingChange('intensity', parseInt(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={bulbSettings.intensity}
+                            onChange={(e) => handleBulbSettingChange('intensity', parseInt(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+
+                      {/* Radius Control */}
+                      <ControlGroup>
+                        <ControlLabel>Radius (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="200" // Keeping original range for bulb radius
+                            value={bulbSettings.radius}
+                            onChange={(e) => handleBulbSettingChange('radius', parseInt(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="200"
+                            value={bulbSettings.radius}
+                            onChange={(e) => handleBulbSettingChange('radius', parseInt(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+
+                      {/* Position X Control */}
+                      <ControlGroup>
+                        <ControlLabel>Position X (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={bulbSettings.positionX}
+                            onChange={(e) => handleBulbSettingChange('positionX', parseInt(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={bulbSettings.positionX}
+                            onChange={(e) => handleBulbSettingChange('positionX', parseInt(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+
+                      {/* Position Y Control */}
+                      <ControlGroup>
+                        <ControlLabel>Position Y (%)</ControlLabel>
+                        <SliderControl>
+                          <RangeInput
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={bulbSettings.positionY}
+                            onChange={(e) => handleBulbSettingChange('positionY', parseInt(e.target.value))}
+                          />
+                          <NumberInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={bulbSettings.positionY}
+                            onChange={(e) => handleBulbSettingChange('positionY', parseInt(e.target.value))}
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+
+                      {/* Color Control */}
+                      <ControlGroup>
+                        <ControlLabel>Color</ControlLabel>
+                        <SliderControl> {/* Still use SliderControl for alignment */}
+                          <ColorInput
+                            type="color"
+                            value={bulbSettings.color}
+                            onChange={(e) => handleBulbSettingChange('color', e.target.value)}
+                            style={{ flex: 1 }} // Allow color input to take space
+                          />
+                        </SliderControl>
+                      </ControlGroup>
+
+                      {/* Blend Mode Control */}
+                      <ControlGroup>
+                        <ControlLabel>Blend Mode</ControlLabel>
+                        <SliderControl> {/* Still use SliderControl for alignment */} 
+                          <SelectInput
+                            value={bulbSettings.blendMode}
+                            onChange={(e) => handleBulbSettingChange('blendMode', e.target.value)}
+                            style={{ flex: 1 }} // Allow select input to take space
+                          >
+                            {/* --- Updated Blend Modes (Matching Glow) --- */}
+                            <option value="source-over">Normal</option> 
+                            {/* Lighten Modes */}
+                            <option value="lighter">Lighter</option> 
+                            <option value="screen">Screen</option>
+                            <option value="color-dodge">Color Dodge</option>
+                            <option value="add">Add</option> 
+                            {/* Darken Modes */}
+                            <option value="multiply">Multiply</option>
+                            <option value="color-burn">Color Burn</option>
+                            {/* Contrast Modes */}
+                            <option value="overlay">Overlay</option>
+                            <option value="soft-light">Soft Light</option>
+                            <option value="hard-light">Hard Light</option>
+                            {/* Inversion/Comparison Modes */}
+                            <option value="difference">Difference</option>
+                            <option value="exclusion">Exclusion</option>
+                            {/* Component Modes */}
+                            <option value="hue">Hue</option>
+                            <option value="saturation">Saturation</option>
+                            <option value="color">Color</option>
+                            <option value="luminosity">Luminosity</option>
+                            {/* --- End Updated Blend Modes --- */}
+                          </SelectInput>
+                        </SliderControl>
+                      </ControlGroup>
+                    </CornerGrid>
+                  </EffectControls>
+                )}
+              </EffectGroup>
+            </Section>
+          </TabContent>
+        )}
+
+        {/* --- Preview Mode Content --- */}
+        {mode === 'preview' && (
+          <TabContent>
+            <Section>
+              <SectionTitle>Preview Mode</SectionTitle>
+              <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                Preview tools coming soon. Edit controls are disabled in this mode.
+              </div>
+            </Section>
+          </TabContent>
+        )}
+
+        {/* Add Renderer Type Control */}
+        <Section>
+          <SectionTitle>Renderer</SectionTitle>
+          <ControlGroup>
             <ControlRow>
-              <ControlGroup>
-                <ControlLabel htmlFor="gridWidth">Width (px)</ControlLabel>
-                <NumberInput
-                  type="number"
-                  id="gridWidth"
-                  value={localGridWidth}
-                  onChange={handleLocalGridWidthChange}
-                  onBlur={handleGridWidthBlur} // Keep blur for width
-                  min="1"
-                  step="1"
-                />
-              </ControlGroup>
-              <ControlGroup>
-                <ControlLabel htmlFor="gridHeight">Height (px)</ControlLabel>
-                <NumberInput
-                  type="number"
-                  id="gridHeight"
-                  value={localGridHeight}
-                  onChange={handleLocalGridHeightChange}
-                  onBlur={handleGridHeightBlur} // Keep blur for height
-                  min="1"
-                  step="1"
-                />
-              </ControlGroup>
+              <ControlLabel>Renderer Type</ControlLabel>
+              <select
+                value={rendererType}
+                onChange={(e) => setRendererType(e.target.value)}
+                style={{
+                  padding: '0.3rem 0.5rem',
+                  backgroundColor: 'var(--input-bg)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '4px',
+                  color: 'var(--input-text)',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="canvas">Canvas</option>
+                <option value="svg">SVG</option>
+                <option value="webgl">WebGL</option>
+              </select>
             </ControlRow>
+            
+            {/* Add Performance Monitor Toggle */}
             <ControlRow>
-              <ControlGroup>
-                <ControlLabel htmlFor="pixelSize">Pixel Size (px)</ControlLabel>
-                <NumberInput
-                  type="number"
-                  id="pixelSize"
-                  value={localPixelSize}
-                  onChange={handleLocalPixelSizeChange} // Use onChange
-                  // onBlur removed for pixel size
-                  min="1"
-                  step="1"
+              <ControlLabel>Performance Monitor</ControlLabel>
+              <Switch>
+                <input
+                  type="checkbox"
+                  checked={showPerformanceMonitor}
+                  onChange={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
                 />
-              </ControlGroup>
-              <ControlGroup>
-                <ControlLabel htmlFor="gridGap">Grid Gap (px)</ControlLabel>
-                <NumberInput
-                  type="number"
-                  id="gridGap"
-                  value={localGridGap}
-                  onChange={handleLocalGridGapChange} // Use onChange
-                  // onBlur removed for grid gap
-                  min="0"
-                  step="1"
-                />
-              </ControlGroup>
+                <span></span>
+              </Switch>
             </ControlRow>
-          </Section>
-
-          <Section> {/* Pixel Effects Section */}
-            <SectionTitle>Pixel Effects</SectionTitle>
-            
-            {/* Pixel Shape Controls - available for both renderers */}
-            <EffectGroup>
-              <EffectHeader $hasContent={true}>
-                <EffectTitle>Pixel Shape</EffectTitle>
-              </EffectHeader>
-              <EffectControls>
-                <ShapeButtonsGrid>
-                  <ShapeButton 
-                    $isActive={pixelShape === 'rectangle'} 
-                    onClick={() => setPixelShape('rectangle')}
-                    title="Rectangle"
-                  >
-                    <RiRectangleLine />
-                  </ShapeButton>
-                  <ShapeButton 
-                    $isActive={pixelShape === 'circle'} 
-                    onClick={() => setPixelShape('circle')}
-                    title="Circle"
-                  >
-                    <RiCircleLine />
-                  </ShapeButton>
-                  <ShapeButton 
-                    $isActive={pixelShape === 'diamond'} 
-                    onClick={() => setPixelShape('diamond')}
-                    title="Diamond"
-                  >
-                    <RiShape2Line />
-                  </ShapeButton>
-                  <ShapeButton 
-                    $isActive={pixelShape === 'triangle'} 
-                    onClick={() => setPixelShape('triangle')}
-                    title="Triangle"
-                  >
-                    <RiTriangleLine />
-                  </ShapeButton>
-                  <ShapeButton 
-                    $isActive={pixelShape === 'hexagon'} 
-                    onClick={() => setPixelShape('hexagon')}
-                    title="Hexagon"
-                  >
-                    <RiHexagonLine />
-                  </ShapeButton>
-                  <ShapeButton 
-                    $isActive={pixelShape === 'custom'} 
-                    onClick={onShowCustomShapeModal}
-                    title="Custom Shape"
-                    style={{ gridColumn: '1 / -1', marginTop: '0.5rem' }}
-                  >
-                    <RiCodeSSlashLine />
-                    <span style={{ marginLeft: '0.5rem' }}>Custom</span>
-                  </ShapeButton>
-                </ShapeButtonsGrid>
-              </EffectControls>
-            </EffectGroup>
-            
-            {/* Corner Radius Controls */}
-            <EffectGroup>
-              <EffectHeader $hasContent={cornerRadius.enabled}>
-                <EffectTitle>Corner Radius</EffectTitle>
-                <Switch>
-                  <input
-                    type="checkbox"
-                    checked={cornerRadius.enabled}
-                    onChange={(e) => setCornerRadius({ enabled: e.target.checked })}
-                  />
-                  <span></span>
-                </Switch>
-              </EffectHeader>
-              {cornerRadius.enabled && (
-                <EffectControls>
-                  <CornerGrid>
-                    <ControlGroup>
-                      <ControlLabel>Top Left (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={cornerRadius.topLeft}
-                          onChange={(e) => handleCornerRadiusChange('topLeft', parseInt(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={cornerRadius.topLeft}
-                          onChange={(e) => handleCornerRadiusChange('topLeft', parseInt(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-                    <ControlGroup>
-                      <ControlLabel>Top Right (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={cornerRadius.topRight}
-                          onChange={(e) => handleCornerRadiusChange('topRight', parseInt(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={cornerRadius.topRight}
-                          onChange={(e) => handleCornerRadiusChange('topRight', parseInt(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-                    <ControlGroup>
-                      <ControlLabel>Bottom Left (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={cornerRadius.bottomLeft}
-                          onChange={(e) => handleCornerRadiusChange('bottomLeft', parseInt(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={cornerRadius.bottomLeft}
-                          onChange={(e) => handleCornerRadiusChange('bottomLeft', parseInt(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-                    <ControlGroup>
-                      <ControlLabel>Bottom Right (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={cornerRadius.bottomRight}
-                          onChange={(e) => handleCornerRadiusChange('bottomRight', parseInt(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={cornerRadius.bottomRight}
-                          onChange={(e) => handleCornerRadiusChange('bottomRight', parseInt(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-                  </CornerGrid>
-
-                  {/* Preset Buttons */}
-                  <PresetButtons>
-                    <PresetButton onClick={() => handleCornerPreset('none')}>None</PresetButton>
-                    <PresetButton onClick={() => handleCornerPreset('circle')}>Circle</PresetButton>
-                    <PresetButton onClick={() => handleCornerPreset('top')}>Top</PresetButton>
-                    <PresetButton onClick={() => handleCornerPreset('bottom')}>Bottom</PresetButton>
-                    <PresetButton onClick={() => handleCornerPreset('left')}>Left</PresetButton>
-                    <PresetButton onClick={() => handleCornerPreset('right')}>Right</PresetButton>
-                  </PresetButtons>
-                </EffectControls>
-              )}
-            </EffectGroup>
-
-            {/* Glow Effect Controls */}
-            <EffectGroup>
-              <EffectHeader $hasContent={glowEnabled}>
-                <EffectTitle>Glow Effect</EffectTitle>
-                <Switch>
-                  <input
-                    type="checkbox"
-                    checked={glowEnabled}
-                    onChange={handleGlowChange}
-                  />
-                  <span></span>
-                </Switch>
-              </EffectHeader>
-              {glowEnabled && (
-                <EffectControls>
-                  <CornerGrid>
-                    {/* --- Row 1 --- */}
-                    <ControlGroup>
-                      <ControlLabel>Opacity (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={glowSettings.opacity}
-                          onChange={(e) => handleGlowSettingChange('opacity', Number(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={glowSettings.opacity}
-                          onChange={(e) => handleGlowSettingChange('opacity', Number(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-                    <ControlGroup>
-                      <ControlLabel>Blend Mode</ControlLabel>
-                      <SliderControl>
-                        <SelectInput
-                          value={glowSettings.blendMode || 'lighter'}
-                          onChange={(e) => handleGlowSettingChange('blendMode', e.target.value)}
-                          style={{ flex: 1 }}
-                        >
-                          {/* Blend Mode Options */}
-                          <option value="source-over">Normal</option>
-                          <option value="lighter">Lighter</option>
-                          <option value="screen">Screen</option>
-                          <option value="color-dodge">Color Dodge</option>
-                          <option value="add">Add</option>
-                          <option value="multiply">Multiply</option>
-                          <option value="color-burn">Color Burn</option>
-                          <option value="overlay">Overlay</option>
-                          <option value="soft-light">Soft Light</option>
-                          <option value="hard-light">Hard Light</option>
-                          <option value="difference">Difference</option>
-                          <option value="exclusion">Exclusion</option>
-                          <option value="hue">Hue</option>
-                          <option value="saturation">Saturation</option>
-                          <option value="color">Color</option>
-                          <option value="luminosity">Luminosity</option>
-                        </SelectInput>
-                      </SliderControl>
-                    </ControlGroup>
-
-                    {/* --- Row 2 --- */}
-                    <ControlGroup>
-                      <ControlLabel>Blur (px)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="50"
-                          value={glowSettings.size}
-                          onChange={(e) => handleGlowSettingChange('size', Number(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="50"
-                          value={glowSettings.size}
-                          onChange={(e) => handleGlowSettingChange('size', Number(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-                    <ControlGroup>
-                      <ControlLabel>Spread (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={glowSettings.spread}
-                          onChange={(e) => handleGlowSettingChange('spread', Number(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={glowSettings.spread}
-                          onChange={(e) => handleGlowSettingChange('spread', Number(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-
-                    {/* --- Row 3 --- */}
-                    <ControlGroup>
-                      <ControlLabel>Offset X (px)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="-50"
-                          max="50"
-                          value={glowSettings.offsetX}
-                          onChange={(e) => handleGlowSettingChange('offsetX', Number(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="-50"
-                          max="50"
-                          value={glowSettings.offsetX}
-                          onChange={(e) => handleGlowSettingChange('offsetX', Number(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-                    <ControlGroup>
-                      <ControlLabel>Offset Y (px)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="-50"
-                          max="50"
-                          value={glowSettings.offsetY}
-                          onChange={(e) => handleGlowSettingChange('offsetY', Number(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="-50"
-                          max="50"
-                          value={glowSettings.offsetY}
-                          onChange={(e) => handleGlowSettingChange('offsetY', Number(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-                  </CornerGrid>
-                </EffectControls>
-              )}
-            </EffectGroup>
-
-            {/* Bulb Effect Controls */}
-            <EffectGroup>
-              <EffectHeader $hasContent={bulbEnabled}>
-                <EffectTitle>Bulb Effect</EffectTitle>
-                <Switch>
-                  <input
-                    type="checkbox"
-                    checked={bulbEnabled}
-                    onChange={(e) => handleBulbChange(e.target.checked)}
-                  />
-                  <span></span>
-                </Switch>
-              </EffectHeader>
-              {bulbEnabled && (
-                <EffectControls>
-                  <CornerGrid>
-                    {/* Intensity Control */}
-                    <ControlGroup>
-                      <ControlLabel>Intensity (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={bulbSettings.intensity}
-                          onChange={(e) => handleBulbSettingChange('intensity', parseInt(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={bulbSettings.intensity}
-                          onChange={(e) => handleBulbSettingChange('intensity', parseInt(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-
-                    {/* Radius Control */}
-                    <ControlGroup>
-                      <ControlLabel>Radius (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="200" // Keeping original range for bulb radius
-                          value={bulbSettings.radius}
-                          onChange={(e) => handleBulbSettingChange('radius', parseInt(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="200"
-                          value={bulbSettings.radius}
-                          onChange={(e) => handleBulbSettingChange('radius', parseInt(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-
-                    {/* Position X Control */}
-                    <ControlGroup>
-                      <ControlLabel>Position X (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={bulbSettings.positionX}
-                          onChange={(e) => handleBulbSettingChange('positionX', parseInt(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={bulbSettings.positionX}
-                          onChange={(e) => handleBulbSettingChange('positionX', parseInt(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-
-                    {/* Position Y Control */}
-                    <ControlGroup>
-                      <ControlLabel>Position Y (%)</ControlLabel>
-                      <SliderControl>
-                        <RangeInput
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={bulbSettings.positionY}
-                          onChange={(e) => handleBulbSettingChange('positionY', parseInt(e.target.value))}
-                        />
-                        <NumberInput
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={bulbSettings.positionY}
-                          onChange={(e) => handleBulbSettingChange('positionY', parseInt(e.target.value))}
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-
-                    {/* Color Control */}
-                    <ControlGroup>
-                      <ControlLabel>Color</ControlLabel>
-                      <SliderControl> {/* Still use SliderControl for alignment */}
-                        <ColorInput
-                          type="color"
-                          value={bulbSettings.color}
-                          onChange={(e) => handleBulbSettingChange('color', e.target.value)}
-                          style={{ flex: 1 }} // Allow color input to take space
-                        />
-                      </SliderControl>
-                    </ControlGroup>
-
-                    {/* Blend Mode Control */}
-                    <ControlGroup>
-                      <ControlLabel>Blend Mode</ControlLabel>
-                      <SliderControl> {/* Still use SliderControl for alignment */} 
-                        <SelectInput
-                          value={bulbSettings.blendMode}
-                          onChange={(e) => handleBulbSettingChange('blendMode', e.target.value)}
-                          style={{ flex: 1 }} // Allow select input to take space
-                        >
-                          {/* --- Updated Blend Modes (Matching Glow) --- */}
-                          <option value="source-over">Normal</option> 
-                          {/* Lighten Modes */}
-                          <option value="lighter">Lighter</option> 
-                          <option value="screen">Screen</option>
-                          <option value="color-dodge">Color Dodge</option>
-                          <option value="add">Add</option> 
-                          {/* Darken Modes */}
-                          <option value="multiply">Multiply</option>
-                          <option value="color-burn">Color Burn</option>
-                          {/* Contrast Modes */}
-                          <option value="overlay">Overlay</option>
-                          <option value="soft-light">Soft Light</option>
-                          <option value="hard-light">Hard Light</option>
-                          {/* Inversion/Comparison Modes */}
-                          <option value="difference">Difference</option>
-                          <option value="exclusion">Exclusion</option>
-                          {/* Component Modes */}
-                          <option value="hue">Hue</option>
-                          <option value="saturation">Saturation</option>
-                          <option value="color">Color</option>
-                          <option value="luminosity">Luminosity</option>
-                          {/* --- End Updated Blend Modes --- */}
-                        </SelectInput>
-                      </SliderControl>
-                    </ControlGroup>
-                  </CornerGrid>
-                </EffectControls>
-              )}
-            </EffectGroup>
-          </Section>
-        </TabContent>
-      )}
-
-      {/* --- Preview Mode Content --- */}
-      {mode === 'preview' && (
-        <TabContent>
-          <Section>
-            <SectionTitle>Preview Mode</SectionTitle>
-            <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              Preview tools coming soon. Edit controls are disabled in this mode.
-            </div>
-          </Section>
-        </TabContent>
-      )}
-
-      {/* Add Renderer Type Control */}
-      <Section>
-        <SectionTitle>Renderer</SectionTitle>
-        <ControlGroup>
-          <ControlRow>
-            <ControlLabel>Renderer Type</ControlLabel>
-            <select
-              value={rendererType}
-              onChange={(e) => setRendererType(e.target.value)}
-              style={{
-                padding: '0.3rem 0.5rem',
-                backgroundColor: 'var(--input-bg)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '4px',
-                color: 'var(--input-text)',
-                fontSize: '0.8rem',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="canvas">Canvas</option>
-              <option value="svg">SVG</option>
-              <option value="webgl">WebGL</option>
-            </select>
-          </ControlRow>
-          
-          {/* Add Performance Monitor Toggle */}
-          <ControlRow>
-            <ControlLabel>Performance Monitor</ControlLabel>
-            <Switch>
-              <input
-                type="checkbox"
-                checked={showPerformanceMonitor}
-                onChange={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
-              />
-              <span></span>
-            </Switch>
-          </ControlRow>
-        </ControlGroup>
-      </Section>
-    </SidebarContainer>
+          </ControlGroup>
+        </Section>
+      </SidebarContainer>
+    </>
   );
 };
 

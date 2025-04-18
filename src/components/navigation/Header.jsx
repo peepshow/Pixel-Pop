@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
 import pixelPopLogo from '../../assets/PixelPop_logo.svg';
+import MobileMenu from './MobileMenu';
 
 // Define styled components for the Header here
 const HeaderWrapper = styled.header`
@@ -33,6 +34,12 @@ const FilenameInput = styled.input`
   &:focus {
     outline: none;
     border-color: var(--accent-color);
+  }
+  
+  @media (max-width: 768px) {
+    width: 150px; /* Smaller width on mobile */
+    font-size: 0.9rem;
+    padding: 0.4rem 0.5rem;
   }
 `;
 
@@ -76,6 +83,16 @@ const Logo = styled.img`
     transform: scale(1.05);
     filter: drop-shadow(0 0 3px var(--accent-color));
   }
+  
+  @media (max-width: 768px) {
+    height: 40px; /* Slightly smaller logo on mobile */
+  }
+`;
+
+const DesktopNav = styled.div`
+  @media (max-width: 768px) {
+    display: none; /* Hide desktop nav on mobile */
+  }
 `;
 
 const Header = ({ filename, onFilenameChange, titleElement, navMenuElement }) => {
@@ -96,7 +113,17 @@ const Header = ({ filename, onFilenameChange, titleElement, navMenuElement }) =>
           placeholder="Enter filename"
         />
       </HeaderSection>
-      <HeaderSection>{navMenuElement}</HeaderSection>
+      <HeaderSection>
+        {/* Desktop navigation */}
+        <DesktopNav>
+          {navMenuElement}
+        </DesktopNav>
+        
+        {/* Mobile navigation */}
+        <MobileMenu>
+          {navMenuElement}
+        </MobileMenu>
+      </HeaderSection>
     </HeaderWrapper>
   );
 };
