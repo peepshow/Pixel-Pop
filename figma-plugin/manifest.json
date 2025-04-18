@@ -13,7 +13,8 @@
   ],
   "networkAccess": {
     "allowedDomains": [
-      "none"
+      "localhost",
+      "127.0.0.1"
     ]
   },
   "documentAccess": "dynamic-page",

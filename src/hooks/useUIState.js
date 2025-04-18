@@ -8,7 +8,7 @@ export const useUIState = (initialState = {}) => {
   const defaultState = {
     mode: 'edit', // 'edit' or 'preview'
     showGrid: true,
-    rendererType: 'canvas', // 'canvas' or 'svg'
+    rendererType: 'canvas', // 'canvas', 'svg', or 'webgl'
     showPerformanceMonitor: false,
     
     // Modal visibility states
@@ -46,7 +46,7 @@ export const useUIState = (initialState = {}) => {
 
   // Set the renderer type
   const setRendererType = useCallback((rendererType) => {
-    if (rendererType !== 'canvas' && rendererType !== 'svg') return;
+    if (rendererType !== 'canvas' && rendererType !== 'svg' && rendererType !== 'webgl') return;
     
     setUIState(prev => ({
       ...prev,

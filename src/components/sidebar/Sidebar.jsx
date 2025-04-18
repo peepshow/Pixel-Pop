@@ -1477,6 +1477,7 @@ const Sidebar = ({
             >
               <option value="canvas">Canvas</option>
               <option value="svg">SVG</option>
+              <option value="webgl">WebGL</option>
             </select>
           </ControlRow>
           

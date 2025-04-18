@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import CanvasRenderer from './CanvasRenderer';
 import SVGRenderer from './SVGRenderer';
+import WebGLRenderer from './WebGLRenderer';
 import { applyPixelColor, pickColor, applyFill, applyLine } from '../../core/drawingLogic';
 import GridOverlay from './GridOverlay';
 import { useRendererProps } from '../../hooks/useRendererProps';
@@ -79,6 +80,7 @@ const Canvas = memo(forwardRef(({
   const canvasElementRef = useRef(null);
   const canvasRendererRef = useRef(null);
   const svgElementRef = useRef(null);
+  const webglRendererRef = useRef(null);
   const zoomWrapperRef = useRef(null);
   const [currentZoomScale, setCurrentZoomScale] = useState(1);
   const lastPositionRef = useRef({ x: -1, y: -1 });
@@ -740,37 +742,39 @@ const Canvas = memo(forwardRef(({
           >
             <RendererWrapper>
               {rendererType === 'canvas' ? (
-                <>
-                {/* {console.log('[Canvas] Passing to CanvasRenderer, effectProps.bulbEnabled:', effectProps.bulbEnabled)} */}
                 <CanvasRenderer
                   ref={canvasRendererRef}
                   {...commonProps}
                   {...effectProps}
-                  // Map the handlers in Canvas.jsx to the prop names expected by CanvasRenderer
-                  onMouseDown={handleMouseDown}       // Pass handleMouseDown as onMouseDown
-                  onMouseUp={handleCanvasMouseUp}     // Pass handleCanvasMouseUp as onMouseUp
-                  onMouseLeave={handleCanvasMouseLeave} // Pass handleCanvasMouseLeave as onMouseLeave
-                  onMouseMove={handleCanvasMouseMove} // Pass handleCanvasMouseMove as onMouseMove
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={handleCanvasMouseUp}
+                  onMouseLeave={handleCanvasMouseLeave}
+                  onMouseMove={handleCanvasMouseMove}
                   spaceKeyPressed={spaceKeyPressedRef.current}
                 />
-                </>
-              ) : (
+              ) : rendererType === 'svg' ? (
                 <SVGRenderer
                   ref={svgElementRef}
                   key={`svg-renderer-${activeColorRef.current || 'default'}-${rendererType}`}
                   {...commonProps}
                   {...effectProps}
                   {...svgProps}
-                  // Pass the correct handlers with the names SVGRenderer expects
-                  onCanvasMouseDown={handleMouseDown} // Pass handleMouseDown from Canvas as onCanvasMouseDown
-                  onCanvasMouseUp={handleCanvasMouseUp} // Pass handleCanvasMouseUp from Canvas as onCanvasMouseUp
-                  onCanvasMouseLeave={handleCanvasMouseLeave} // Pass handleCanvasMouseLeave from Canvas as onCanvasMouseLeave
-                  onCanvasMouseMove={handleCanvasMouseMove} // Pass handleCanvasMouseMove from Canvas as onCanvasMouseMove
-                  // SVGRenderer seems to use onClick for simple clicks
-                  // We need to decide if Canvas.jsx should handle this or if processInteraction covers it.
-                  // For now, let's pass a handler that triggers processInteraction for simple clicks.
-                  onClick={handlePixelInteraction} // Pass handlePixelInteraction from Canvas as onClick
+                  onCanvasMouseDown={handleMouseDown}
+                  onCanvasMouseUp={handleCanvasMouseUp}
+                  onCanvasMouseLeave={handleCanvasMouseLeave}
+                  onCanvasMouseMove={handleCanvasMouseMove}
+                  onClick={handlePixelInteraction}
                   activeTool={activeTool}
+                />
+              ) : (
+                <WebGLRenderer
+                  ref={webglRendererRef}
+                  {...commonProps}
+                  {...effectProps}
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={handleCanvasMouseUp}
+                  onMouseLeave={handleCanvasMouseLeave}
+                  onMouseMove={handleCanvasMouseMove}
                 />
               )}
               {showGrid && (
