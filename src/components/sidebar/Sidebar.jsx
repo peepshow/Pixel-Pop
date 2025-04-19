@@ -1544,9 +1544,9 @@ const Sidebar = ({
         </Section>
 
         <SidebarFooter>
-          © Copyright <a href="https://reganvause.com" target="_blank" rel="noopener noreferrer">Regan Vause</a>
-          {' | '}
           <button onClick={() => setShowAboutModal(true)}>About PixelPop</button>
+          <br />
+          © {new Date().getFullYear()} <a href="https://reganvause.com" target="_blank" rel="noopener noreferrer">Regan Vause</a>. <a href="https://github.com/peepshow/pixel-pop/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>.
         </SidebarFooter>
       </SidebarContainer>
 
@@ -1556,9 +1556,13 @@ const Sidebar = ({
           <p>
             Crafted with care by <a href="https://reganvause.com" target="_blank" rel="noopener noreferrer">Regan Vause</a> — designer, maker, tinkerer.
           </p>
+          <p>
+            <a href="https://github.com/peepshow/pixel-pop/blob/main/docs/help.md" target="_blank" rel="noopener noreferrer">Help</a>
+          </p>
           <h3>Credits</h3>
           <p>Built with Cursor.</p>
           <p>Open source on <a href="https://github.com/peepshow/pixel-pop" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+          <p>Licensed under the <a href="https://github.com/peepshow/pixel-pop/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>.</p>
         </Modal>
       )}
     </>
