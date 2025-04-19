@@ -29,7 +29,7 @@ import { exportToFigma } from './utils/figmaExport'
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background-color: var(--bg-primary);
   color: var(--text-primary);
 `
@@ -40,12 +40,14 @@ const MainContent = styled.main`
   flex-direction: row;
   position: relative;
   overflow: hidden;
-  margin-top: 60px; /* Account for fixed header height */
+  height: calc(100% - 60px); /* Calculate height based on parent */
+  padding-top: 60px; /* Add padding to offset fixed header */
   padding-right: ${props => props.$sidebarVisible ? '330px' : '0'};
   transition: padding-right 0.3s ease;
   
   @media (max-width: 768px) {
     padding-right: 0; /* No padding on mobile */
+    // Keep padding-top for mobile header
   }
 `
 

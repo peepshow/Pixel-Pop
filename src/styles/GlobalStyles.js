@@ -51,12 +51,22 @@ const GlobalStyles = createGlobalStyle`
     padding: 0;
   }
 
+  html {
+    height: 100%;
+  }
+
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
       Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: var(--bg-primary); /* Uses the darkest color now */
     color: var(--text-primary);
     line-height: 1.5;
+    height: 100%; /* Add height 100% to body */
+    overflow: hidden; /* Prevent body scrolling */
+  }
+
+  #root { /* Assuming your app mounts to an element with id="root" */
+    height: 100%;
   }
 
   /* ReactCrop styles */

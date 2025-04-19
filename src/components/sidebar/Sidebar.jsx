@@ -1544,9 +1544,8 @@ const Sidebar = ({
         </Section>
 
         <SidebarFooter>
-          <button onClick={() => setShowAboutModal(true)}>About PixelPop</button>
-          <br />
-          © {new Date().getFullYear()} <a href="https://reganvause.com" target="_blank" rel="noopener noreferrer">Regan Vause</a>. <a href="https://github.com/peepshow/pixel-pop/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>.
+          <p><button onClick={() => setShowAboutModal(true)}>About PixelPop</button> | <a href="https://github.com/peepshow/pixel-pop/blob/main/docs/help.md" target="_blank" rel="noopener noreferrer">Help</a></p>
+          <p>© {new Date().getFullYear()} <a href="https://reganvause.com" target="_blank" rel="noopener noreferrer">Regan Vause</a>. <a href="https://github.com/peepshow/pixel-pop/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>.</p>
         </SidebarFooter>
       </SidebarContainer>
 
@@ -1555,9 +1554,6 @@ const Sidebar = ({
           <p>PixelPop is a lightweight pixel art editor built for fun, creativity, and simplicity. Designed for designers, artists, and kids of all ages, it runs right in your browser with full touch support and easy export options.</p>
           <p>
             Crafted with care by <a href="https://reganvause.com" target="_blank" rel="noopener noreferrer">Regan Vause</a> — designer, maker, tinkerer.
-          </p>
-          <p>
-            <a href="https://github.com/peepshow/pixel-pop/blob/main/docs/help.md" target="_blank" rel="noopener noreferrer">Help</a>
           </p>
           <h3>Credits</h3>
           <p>Built with Cursor.</p>
